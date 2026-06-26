@@ -56,17 +56,28 @@ class BaseScraper:
 
             for grant in grants:
                 title = grant.get('title', '').strip()
+                grant_url = grant.get('url', '').strip()
                 if not title:
                     continue
 
-                ScrapedGrant.objects.create(
+                # Use source + URL as a stable deduplication key.
+                # If the same listing appears on the next run, we skip it
+                # instead of creating a duplicate in the review queue.
+                raw_html = grant.pop('raw_html', '')
+                obj, created = ScrapedGrant.objects.get_or_create(
                     source=source,
-                    raw_title=title,
-                    raw_html_snippet=grant.pop('raw_html', ''),
-                    parsed_data=grant,
-                    status='pending',
+                    parsed_data__url=grant_url if grant_url else None,
+                    defaults={
+                        'raw_title': title,
+                        'raw_html_snippet': raw_html,
+                        'parsed_data': grant,
+                        'status': 'pending',
+                    }
                 )
-                saved += 1
+                if created:
+                    saved += 1
+                else:
+                    logger.debug(f"[{self.source_name}] Skipped duplicate: {title[:60]}")
 
             # Update source health
             source.last_scraped_at = timezone.now()
