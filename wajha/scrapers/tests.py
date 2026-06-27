@@ -1,5 +1,5 @@
 from django.test import TestCase
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 from scrapers.models import GrantSource, ScrapedGrant
 from scrapers.scraper_scripts.opportunity_desk_scraper import OpportunityDeskScraper
 from scrapers.scraper_scripts.grab_scholarship_scraper import GrabScholarshipScraper
@@ -103,11 +103,36 @@ class ScraperTestCase(TestCase):
                     <div class="elementor-post__badge">بكالوريوس</div>
                     <div class="elementor-post-date">26 يونيو، 2026</div>
                 </article>
+                <article class="elementor-post">
+                    <h3 class="elementor-post__title">
+                        <a href="https://grabscholarship.com/test-job/">فرصة عمل تجريبية 2026</a>
+                    </h3>
+                    <div class="elementor-post__badge">عمل</div>
+                </article>
             </body>
         </html>
         """
-        mock_get.return_value.status_code = 200
-        mock_get.return_value.text = mock_html
+        detail_html = """
+        <html>
+            <body>
+                <p>آخر موعد للتقديم: 1 نوفمبر 2026.</p>
+            </body>
+        </html>
+        """
+
+        def mock_response(html):
+            response = Mock()
+            response.status_code = 200
+            response.text = html
+            response.raise_for_status.return_value = None
+            return response
+
+        mock_get.side_effect = [
+            mock_response(mock_html),
+            mock_response(detail_html),
+            mock_response(mock_html),
+            mock_response(detail_html),
+        ]
 
         scraper = GrabScholarshipScraper()
         grants = scraper.scrape()
@@ -117,6 +142,7 @@ class ScraperTestCase(TestCase):
         self.assertEqual(grants[0]['title'], 'منحة دراسية تجريبية 2026')
         self.assertEqual(grants[0]['url'], 'https://grabscholarship.com/test-ar/')
         self.assertEqual(grants[0]['category'], 'بكالوريوس')
+        self.assertEqual(grants[0]['deadline'], '2026-11-01')
 
         # Assert correct database creation
         scraper.run()
@@ -124,5 +150,6 @@ class ScraperTestCase(TestCase):
         scraped_obj = ScrapedGrant.objects.first()
         self.assertEqual(scraped_obj.raw_title, 'منحة دراسية تجريبية 2026')
         self.assertEqual(scraped_obj.status, 'pending')
+        self.assertEqual(scraped_obj.parsed_data['deadline'], '2026-11-01')
 
 
