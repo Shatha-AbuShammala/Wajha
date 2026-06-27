@@ -1,6 +1,10 @@
+
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.core.validators import RegexValidator
 from .models import User
+
+
 
 
 class SignUpForm(UserCreationForm):
@@ -17,6 +21,22 @@ class SignUpForm(UserCreationForm):
         return email
 
 
+class EmailAuthenticationForm(AuthenticationForm):
+    username = forms.EmailField(
+        label="Email",
+        widget=forms.EmailInput(attrs={'autofocus': True})
+    )
+    password = forms.CharField(
+        widget=forms.PasswordInput()
+    )
+
+    error_messages = {
+        **AuthenticationForm.error_messages,
+        'invalid_login': "The email address or password is incorrect.",
+        'inactive': "This account is inactive.",
+    }
+
+
 class ProfileSetupForm(forms.ModelForm):
     GPA_SCALE_CHOICES = (
         ('4', '4.0 Scale'),
@@ -29,10 +49,11 @@ class ProfileSetupForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ('full_name', 'country', 'field_of_study', 'degree_level',
-                  'gpa', 'languages', 'cv_file', 'bio')
+        fields = ('field_of_study', 'degree_level', 'gpa', 'country',
+                  'languages', 'cv_file')
         widgets = {
-            'bio': forms.Textarea(attrs={'rows': 4}),
+            'field_of_study': forms.TextInput(),
+            'languages': forms.TextInput(attrs={'placeholder': 'e.g. Arabic, English'}),
         }
 
     def clean(self):
@@ -44,8 +65,7 @@ class ProfileSetupForm(forms.ModelForm):
             if scale == '100':
                 if gpa < 0 or gpa > 100:
                     raise forms.ValidationError("The average on a scale of 100 must be between 0 and 100.")
-                converted_gpa = round((gpa / 100) * 4, 2)
-                cleaned_data['gpa'] = converted_gpa
+                cleaned_data['gpa'] = round((gpa / 100) * 4, 2)
             else:
                 if gpa < 0 or gpa > 4:
                     raise forms.ValidationError("The average on a 4.0 scale should be between 0 and 4.")

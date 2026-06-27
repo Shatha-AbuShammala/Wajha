@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}Build your profile — Wajha{% endblock %}
+{% block content %}
+<section class="page active" id="page-onboarding">
+  <div class="onb-shell">
+    <div class="onb-progress">
+      <div class="onb-step done">✓</div>
+      <div class="onb-bar filled"></div>
+      <div class="onb-step current">2</div>
+      <div class="onb-bar"></div>
+      <div class="onb-step">3</div>
+    </div>
+    <div class="onb-grid">
+      <form class="onb-form" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <h2>Tell us about your studies</h2>
+        <p>The more we know, the better AI can match you.</p>
+
+        <div class="form-row">
+          <div class="field">
+            <label for="{{ form.field_of_study.id_for_label }}">Field of study</label>
+            {{ form.field_of_study }}
+          </div>
+          <div class="field">
+            <label for="{{ form.degree_level.id_for_label }}">Degree level</label>
+            {{ form.degree_level }}
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label for="{{ form.gpa.id_for_label }}">GPA</label>
+            {{ form.gpa }}
+            {{ form.gpa_scale }}
+          </div>
+          <div class="field">
+            <label for="{{ form.country.id_for_label }}">Country</label>
+            {{ form.country }}
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:20px;">
+          <label for="{{ form.languages.id_for_label }}">Languages</label>
+          {{ form.languages }}
+        </div>
+        <div class="field">
+          <label for="{{ form.cv_file.id_for_label }}">Upload your CV</label>
+          <div class="dropzone">⬆ {{ form.cv_file }}</div>
+          {% if form.cv_file.errors %}<div style="color:#E5484D; font-size:12.5px; margin-top:6px;">{{ form.cv_file.errors.0 }}</div>{% endif %}
+        </div>
+        <div class="onb-nav">
+          <a href="#" class="btn btn-ghost">← Back</a>
+          <button type="submit" class="btn btn-primary" id="onbFinish">Continue →</button>
+        </div>
+      </form>
+      <div>
+        <div class="gap-card">
+          <span class="ai-tag">✦ AI profile gap analysis</span>
+          <p style="font-size:13px; color:var(--fg-dim); margin-top:12px;">To unlock more matches, consider adding:</p>
+          <ul>
+            <li><span class="bearing"></span> A recommendation letter</li>
+            <li><span class="bearing"></span> An English certificate (IELTS / TOEFL)</li>
+            <li><span class="bearing"></span> 1–2 portfolio links</li>
+          </ul>
+          <div class="note">Prepares you for future grants — not just today's.</div>
+        </div>
+        <div class="strength-card">
+          <div style="font-size:13px; color:var(--fg-dim);">Profile strength</div>
+          <div class="strength-bar"><div class="strength-fill"></div></div>
+          <div class="pct">72% — looking good!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
