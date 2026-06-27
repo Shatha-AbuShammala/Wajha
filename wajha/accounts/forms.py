@@ -1,0 +1,60 @@
+from django import forms
+from django.contrib.auth.forms import UserCreationForm
+from .models import User
+
+
+class SignUpForm(UserCreationForm):
+    email = forms.EmailField(required=True)
+
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'password1', 'password2')
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError("This email address is already in use.")
+        return email
+
+
+class ProfileSetupForm(forms.ModelForm):
+    GPA_SCALE_CHOICES = (
+        ('4', '4.0 Scale'),
+        ('100', '100 Scale'),
+    )
+    gpa_scale = forms.ChoiceField(
+        choices=GPA_SCALE_CHOICES, initial='4', required=False,
+        label="Average Assessment System"
+    )
+
+    class Meta:
+        model = User
+        fields = ('full_name', 'country', 'field_of_study', 'degree_level',
+                  'gpa', 'languages', 'cv_file', 'bio')
+        widgets = {
+            'bio': forms.Textarea(attrs={'rows': 4}),
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        gpa = cleaned_data.get('gpa')
+        scale = cleaned_data.get('gpa_scale', '4')
+
+        if gpa is not None:
+            if scale == '100':
+                if gpa < 0 or gpa > 100:
+                    raise forms.ValidationError("The average on a scale of 100 must be between 0 and 100.")
+                converted_gpa = round((gpa / 100) * 4, 2)
+                cleaned_data['gpa'] = converted_gpa
+            else:
+                if gpa < 0 or gpa > 4:
+                    raise forms.ValidationError("The average on a 4.0 scale should be between 0 and 4.")
+
+        return cleaned_data
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance.gpa = self.cleaned_data.get('gpa')
+        if commit:
+            instance.save()
+        return instance
