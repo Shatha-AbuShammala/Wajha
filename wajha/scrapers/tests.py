@@ -2,6 +2,7 @@ from django.test import TestCase
 from unittest.mock import patch
 from scrapers.models import GrantSource, ScrapedGrant
 from scrapers.scraper_scripts.opportunity_desk_scraper import OpportunityDeskScraper
+from scrapers.scraper_scripts.grab_scholarship_scraper import GrabScholarshipScraper
 
 
 class ScraperTestCase(TestCase):
@@ -88,5 +89,40 @@ class ScraperTestCase(TestCase):
         self.assertEqual(grant.source_url, "https://test.com/awesome-fellowship")
         self.assertEqual(grant.status, 'draft')
         self.assertEqual(grant.added_by, user)
+
+    @patch('requests.get')
+    def test_grab_scholarship_scraper(self, mock_get):
+        # Mock HTML structure representing an article post of Grab Scholarship
+        mock_html = """
+        <html>
+            <body>
+                <article class="elementor-post">
+                    <h3 class="elementor-post__title">
+                        <a href="https://grabscholarship.com/test-ar/">منحة دراسية تجريبية 2026</a>
+                    </h3>
+                    <div class="elementor-post__badge">بكالوريوس</div>
+                    <div class="elementor-post-date">26 يونيو، 2026</div>
+                </article>
+            </body>
+        </html>
+        """
+        mock_get.return_value.status_code = 200
+        mock_get.return_value.text = mock_html
+
+        scraper = GrabScholarshipScraper()
+        grants = scraper.scrape()
+
+        # Assert correct parser extraction
+        self.assertEqual(len(grants), 1)
+        self.assertEqual(grants[0]['title'], 'منحة دراسية تجريبية 2026')
+        self.assertEqual(grants[0]['url'], 'https://grabscholarship.com/test-ar/')
+        self.assertEqual(grants[0]['category'], 'بكالوريوس')
+
+        # Assert correct database creation
+        scraper.run()
+        self.assertEqual(ScrapedGrant.objects.count(), 1)
+        scraped_obj = ScrapedGrant.objects.first()
+        self.assertEqual(scraped_obj.raw_title, 'منحة دراسية تجريبية 2026')
+        self.assertEqual(scraped_obj.status, 'pending')
 
 
