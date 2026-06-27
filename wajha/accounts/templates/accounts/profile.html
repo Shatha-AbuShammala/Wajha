@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}My profile — Wajha{% endblock %}
+{% block content %}
+<section class="page active">
+  <div class="profile-banner"><div class="pb-glow"></div></div>
+  <div class="profile-shell">
+    <div class="profile-top">
+      <div class="profile-pic">{{ profile_user.username|slice:":2"|upper }}</div>
+      <div class="profile-id">
+        <h1>{{ profile_user.full_name|default:profile_user.username }}</h1>
+        <div class="handle">@{{ profile_user.username }} · {{ profile_user.field_of_study|default:"—" }}</div>
+        <div class="loc">📍 {{ profile_user.country|default:"—" }} · joined {{ profile_user.created_at|date:"M Y" }}</div>
+      </div>
+    </div>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="note" style="margin-bottom:16px;">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <div class="profile-grid">
+      <div>
+        <div class="gap-card">
+          <span class="ai-tag">Academic profile</span>
+          <form method="post" enctype="multipart/form-data" style="margin-top:16px;">
+            {% csrf_token %}
+            <div class="field">
+              <label for="{{ form.field_of_study.id_for_label }}">Field of study</label>
+              {{ form.field_of_study }}
+            </div>
+            <div class="field">
+              <label for="{{ form.degree_level.id_for_label }}">Degree level</label>
+              {{ form.degree_level }}
+            </div>
+            <div class="field">
+              <label for="{{ form.gpa.id_for_label }}">GPA</label>
+              {{ form.gpa }}
+              {{ form.gpa_scale }}
+            </div>
+            <div class="field">
+              <label for="{{ form.country.id_for_label }}">Country</label>
+              {{ form.country }}
+            </div>
+            <div class="field">
+              <label for="{{ form.languages.id_for_label }}">Languages</label>
+              {{ form.languages }}
+            </div>
+            <div class="field">
+              <label for="{{ form.cv_file.id_for_label }}">CV</label>
+              <div class="dropzone">
+                {% if profile_user.cv_file %}
+                  <a href="{{ profile_user.cv_file.url }}" target="_blank">📄 Current CV — view</a><br>
+                {% endif %}
+                {{ form.cv_file }}
+              </div>
+              {% if form.cv_file.errors %}<div style="color:#E5484D; font-size:12.5px; margin-top:6px;">{{ form.cv_file.errors.0 }}</div>{% endif %}
+            </div>
+            <button type="submit" class="btn btn-primary btn-block" style="margin-top:10px;">Save changes →</button>
+          </form>
+        </div>
+      </div>
+
+      <div>
+        <div class="strength-card">
+          <div style="font-size:13px; color:var(--fg-dim);">Profile strength</div>
+          <div class="strength-bar"><div class="strength-fill"></div></div>
+          <div class="pct">Keep your profile updated for better matches</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

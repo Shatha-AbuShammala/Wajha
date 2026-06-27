@@ -32,7 +32,7 @@ class User(AbstractUser):
         max_digits=3, decimal_places=2, null=True, blank=True,
         validators=[MinValueValidator(0), MaxValueValidator(4)])  
     languages = models.CharField(max_length=255, blank=True)  
-    cv_file = models.FileField(upload_to='cvs/', null=True, blank=True)
+    cv_file = models.FileField(upload_to='cvs/', null=True, blank=True , validators=[validate_cv_file] )
     bio = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at=models.DateTimeField(auto_now=True)

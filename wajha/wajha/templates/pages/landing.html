@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% block title %}Wajha — Find your direction{% endblock %}
+{% block content %}
+<section class="page active" id="page-landing">
+  <div class="hero">
+    <div class="hero-grid">
+      <div>
+        <div class="eyebrow"><span class="bearing"></span> For Palestinian students &amp; graduates</div>
+        <h1>Find your <span class="accent">direction</span>.<br>One application<br>at a time.</h1>
+        <p class="lede">Wajha brings every verified scholarship, deadline, and eligibility rule into one place — then uses AI to point you at the ones actually worth your time.</p>
+        <div class="hero-ctas">
+          <a href="{% url 'login' %}" style="text-decoration:none;"><button class="btn btn-primary">Get matched <span class="bearing" style="transform:rotate(90deg) translateY(1px); color:#fff;"></span></button></a>
+          <button class="btn btn-ghost" data-goto="search">Browse all grants</button>
+        </div>
+        <div class="hero-stats">
+          <div class="stat"><div class="num">1,240+</div><div class="label">verified grants</div></div>
+          <div class="stat"><div class="num">38</div><div class="label">countries</div></div>
+          <div class="stat"><div class="num">96%</div><div class="label">best-match accuracy*</div></div>
+        </div>
+      </div>
+      <div class="compass-wrap">
+        <div class="compass">
+          <svg viewBox="0 0 200 200">
+            <circle cx="100" cy="100" r="92" fill="none" stroke="var(--line)" stroke-width="1.5"/>
+            <circle cx="100" cy="100" r="70" fill="none" stroke="var(--line)" stroke-width="1"/>
+            <g id="ticks"></g>
+            <line x1="100" y1="100" x2="100" y2="30" stroke="var(--orange)" stroke-width="3" stroke-linecap="round" id="needle"/>
+            <line x1="100" y1="100" x2="100" y2="150" stroke="var(--fg-faint)" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="100" cy="100" r="6" fill="var(--orange)"/>
+          </svg>
+        </div>
+        <div class="compass-card cc-1">
+          <div class="ct">DAAD Study Scholarship</div>
+          <div class="cs">Germany · Masters</div>
+          <div class="cd">⏳ 42 days left</div>
+        </div>
+        <div class="compass-card cc-2">
+          <div class="ct">Chevening</div>
+          <div class="cs">UK Government</div>
+          <div class="cd">⏳ 90 days left</div>
+        </div>
+        <div class="compass-card cc-3">
+          <div class="ct">96% match</div>
+          <div class="cs">strong fit · CS · Masters</div>
+        </div>
+        <div class="compass-card cc-4">
+          <div class="ct">Fulbright Program</div>
+          <div class="cs">USA · Open field</div>
+          <div class="cd">⏳ 18 days left</div>
+        </div>
+        <div class="compass-card cc-5">
+          <div class="ct">Erasmus Mundus</div>
+          <div class="cs">EU · Joint Masters</div>
+          <div class="cd">⏳ 30 days left</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="shell">
+      <div class="section-head">
+        <h2>Built for the actual problem</h2>
+        <p>Not a job board. A system that tracks deadlines and explains fit, so nothing slips through.</p>
+      </div>
+      <div class="feat-grid">
+        <div class="feat">
+          <div class="ico" style="background:var(--orange-dim); color:var(--orange);">◎</div>
+          <h3>Grant database</h3>
+          <p>A centralized, regularly updated collection of scholarships with deadlines, eligibility, and sources.</p>
+        </div>
+        <div class="feat">
+          <div class="ico" style="background:var(--indigo-dim); color:var(--indigo);">✦</div>
+          <h3>AI matching</h3>
+          <p>Your profile ranked against every grant by genuine fit — with a plain-language reason for each one.</p>
+        </div>
+        <div class="feat">
+          <div class="ico" style="background:var(--green-dim); color:var(--green);">✎</div>
+          <h3>Application support</h3>
+          <p>AI drafts a first version of your motivation letter and reviews your CV for gaps worth fixing.</p>
+        </div>
+        <div class="feat">
+          <div class="ico" style="background:var(--orange-dim); color:var(--orange);">⏳</div>
+          <h3>Deadline tracking</h3>
+          <p>Every saved grant moves through clear stages, with alerts before deadlines arrive — not after.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section" style="padding-top:0;">
+    <div class="shell">
+      <div class="section-head">
+        <h2>Latest opportunities</h2>
+        <p>Quick filter: <span style="color:var(--fg);">Field</span> · Degree · Country · Deadline</p>
+      </div>
+      <div class="grants-rail" id="landingGrants">
+        {% for g in grants %}
+        <div class="gcard">
+          <div class="gcard-top">
+            <span class="pill pill-level">{{ g.level }}</span>
+          </div>
+          <div>
+            <h4>{{ g.title }}</h4>
+            <div class="org">{{ g.org }}</div>
+          </div>
+          <div class="gcard-tags">
+            {% for t in g.tags %}<span class="tag">{{ t }}</span>{% endfor %}
+          </div>
+          <div class="gcard-foot">
+            <div class="deadline {% if g.urgent %}urgent{% endif %}"><span class="dot"></span> ⏳ {{ g.days }} days left</div>
+            <button class="save-btn" type="button">Save +</button>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block extra_js %}
+<script>
+  // toggle Save buttons (visual only, no persistence yet — grants app will wire this up later)
+  document.querySelectorAll('.save-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      btn.classList.toggle('saved');
+      btn.textContent = btn.classList.contains('saved') ? 'Saved ✓' : 'Save +';
+    });
+  });
+
+  // Compass ticks (24 marks around the dial)
+  const ticksG = document.getElementById('ticks');
+  if (ticksG) {
+    for (let i = 0; i < 24; i++) {
+      const angle = (i / 24) * 360;
+      const rad = angle * Math.PI / 180;
+      const len = i % 6 === 0 ? 10 : 5;
+      const x1 = 100 + 92 * Math.sin(rad), y1 = 100 - 92 * Math.cos(rad);
+      const x2 = 100 + (92 - len) * Math.sin(rad), y2 = 100 - (92 - len) * Math.cos(rad);
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', x1); line.setAttribute('y1', y1);
+      line.setAttribute('x2', x2); line.setAttribute('y2', y2);
+      line.setAttribute('stroke', 'var(--fg-faint)');
+      line.setAttribute('stroke-width', i % 6 === 0 ? 1.5 : 1);
+      ticksG.appendChild(line);
+    }
+  }
+
+  // Compass needle rotation (matches prototype: +37deg every 2.6s, spring easing)
+  const needle = document.getElementById('needle');
+  if (needle && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    let needleAngle = 0;
+    setInterval(() => {
+      needleAngle = (needleAngle + 37) % 360;
+      needle.style.transformOrigin = '100px 100px';
+      needle.style.transition = 'transform 1.4s cubic-bezier(.4,1.4,.6,1)';
+      needle.style.transform = `rotate(${needleAngle}deg)`;
+    }, 2600);
+  }
+</script>
+{% endblock %}
