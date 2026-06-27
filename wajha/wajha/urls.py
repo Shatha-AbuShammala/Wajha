@@ -7,6 +7,7 @@ from accounts.pages_views import landing_view, about_view
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("accounts/", include("accounts.urls")),
+    path("grants/", include("grants.urls", namespace="grants")),
     path("", landing_view, name="landing"),
     path("", landing_view, name="home"),
     path("about/", about_view, name="about"),
