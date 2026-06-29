@@ -64,16 +64,28 @@ class BaseScraper:
                 # If the same listing appears on the next run, we skip it
                 # instead of creating a duplicate in the review queue.
                 raw_html = grant.pop('raw_html', '')
-                obj, created = ScrapedGrant.objects.get_or_create(
-                    source=source,
-                    parsed_data__url=grant_url if grant_url else None,
-                    defaults={
-                        'raw_title': title,
-                        'raw_html_snippet': raw_html,
-                        'parsed_data': grant,
-                        'status': 'pending',
-                    }
-                )
+                
+                # Check if this URL was already scraped from this source.
+                # Using filter().first() prevents MultipleObjectsReturned errors if duplicates exist.
+                existing = None
+                if grant_url:
+                    existing = ScrapedGrant.objects.filter(
+                        source=source,
+                        parsed_data__url=grant_url
+                    ).first()
+
+                if existing:
+                    obj = existing
+                    created = False
+                else:
+                    obj = ScrapedGrant.objects.create(
+                        source=source,
+                        raw_title=title,
+                        raw_html_snippet=raw_html,
+                        parsed_data=grant,
+                        status='pending',
+                    )
+                    created = True
                 if created:
                     saved += 1
                 else:
