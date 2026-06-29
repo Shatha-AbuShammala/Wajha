@@ -1,0 +1,236 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ grant.title }} — Wajha{% endblock %}
+
+{% block content %}
+
+<div class="shell" style="padding-top: 2rem;">
+
+    <!-- -------------------------------------------------------- -->
+    <!-- Back Button -->
+    <!-- -------------------------------------------------------- -->
+    <a href="{% url 'grants:list' %}" style="text-decoration:none; color:var(--fg-faint); font-size:0.9rem; display:inline-flex; align-items:center; gap:0.4rem; margin-bottom:1.5rem;">
+        ← Back to results
+    </a>
+
+    <div style="display:grid; grid-template-columns: 1fr 320px; gap:2rem; align-items:start;">
+
+        <!-- -------------------------------------------------------- -->
+        <!-- Left: Main Content -->
+        <!-- -------------------------------------------------------- -->
+        <div>
+
+            <!-- Tags -->
+            <div style="display:flex; gap:0.5rem; margin-bottom:1rem;">
+                {% for degree in grant.degree_levels.all %}
+                    <span class="pill pill-level">{{ degree.get_degree_display|upper }}</span>
+                {% endfor %}
+                <span class="pill" style="background:var(--green-dim); color:var(--green);">
+                    {{ grant.get_funding_type_display|upper }}
+                </span>
+            </div>
+
+            <!-- Title -->
+            <h1 style="font-size:2rem; font-weight:700; margin-bottom:0.5rem;">
+                {{ grant.title }}
+            </h1>
+
+            <!-- Organization -->
+            <div style="color:var(--fg-faint); margin-bottom:2rem;">
+                {{ grant.organization }}
+                {% for country in grant.countries.all %}
+                    · {{ country.country_name }}
+                {% endfor %}
+            </div>
+
+            <!-- ------------------------------------------------ -->
+            <!-- AI Eligibility Box -->
+            <!-- ------------------------------------------------ -->
+            {% if grant.eligibility_summary %}
+            <div style="background:var(--indigo-dim); border:1px solid var(--indigo); border-radius:14px; padding:1.5rem; margin-bottom:2rem;">
+                <div style="display:inline-flex; align-items:center; gap:0.4rem; background:var(--indigo); color:#fff; padding:0.2rem 0.6rem; border-radius:6px; font-size:0.8rem; margin-bottom:1rem;">
+                    ✦ AI eligibility, simplified
+                </div>
+                <div style="color:var(--fg); line-height:1.7;">
+                    {{ grant.eligibility_summary|linebreaks }}
+                </div>
+                <div style="color:var(--fg-faint); font-size:0.8rem; margin-top:1rem;">
+                    Generated from the official eligibility page · also available in العربية
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- ------------------------------------------------ -->
+            <!-- About this grant -->
+            <!-- ------------------------------------------------ -->
+            <div style="margin-bottom:2rem;">
+                <h2 style="font-size:1.1rem; font-weight:600; margin-bottom:0.75rem;">
+                    About this grant
+                </h2>
+                <div style="color:var(--fg); line-height:1.7;">
+                    {{ grant.description|linebreaks }}
+                </div>
+            </div>
+
+            <!-- ------------------------------------------------ -->
+            <!-- Eligibility Criteria -->
+            <!-- ------------------------------------------------ -->
+            <div style="margin-bottom:2rem;">
+                <h2 style="font-size:1.1rem; font-weight:600; margin-bottom:0.75rem;">
+                    Eligibility criteria
+                </h2>
+                <div style="color:var(--fg); line-height:1.7;">
+                    {{ grant.eligibility_text|linebreaks }}
+                </div>
+            </div>
+
+            <!-- ------------------------------------------------ -->
+            <!-- Tags -->
+            <!-- ------------------------------------------------ -->
+            <div style="margin-bottom:2rem;">
+                <h2 style="font-size:1.1rem; font-weight:600; margin-bottom:0.75rem;">
+                    Tags
+                </h2>
+                <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                    {% for field in grant.fields.all %}
+                        <span class="tag">{{ field.field_name }}</span>
+                    {% endfor %}
+                    {% for country in grant.countries.all %}
+                        <span class="tag">Open to {{ country.country_name }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+
+        <!-- -------------------------------------------------------- -->
+        <!-- Right: Sidebar -->
+        <!-- -------------------------------------------------------- -->
+        <div style="position:sticky; top:80px;">
+            <div style="border:1px solid var(--line); border-radius:16px; padding:1.5rem;">
+
+                <!-- Deadline -->
+                <div style="text-align:center; margin-bottom:1.5rem; padding-bottom:1.5rem; border-bottom:1px solid var(--line);">
+                    <div class="eyebrow" style="margin-bottom:0.5rem;">DEADLINE</div>
+                    <div style="font-size:1.5rem; font-weight:700; color:var(--fg);">
+                        {{ grant.deadline|date:"d M Y" }}
+                    </div>
+                    <div class="deadline {% if is_urgent %}urgent{% endif %}" style="justify-content:center; margin-top:0.4rem;">
+                         {{ days_left }} days left
+                    </div>
+                </div>
+
+                <!-- Grant Info -->
+                <div style="margin-bottom:1.5rem;">
+                    <div style="display:flex; justify-content:space-between; padding:0.5rem 0; border-bottom:1px solid var(--line);">
+                        <span style="color:var(--fg-faint);">Funding</span>
+                        <span style="font-weight:600;">{{ grant.get_funding_type_display }}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; padding:0.5rem 0; border-bottom:1px solid var(--line);">
+                        <span style="color:var(--fg-faint);">Level</span>
+                        <span style="font-weight:600;">
+                            {% for d in grant.degree_levels.all %}
+                                {{ d.get_degree_display }}{% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                        </span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; padding:0.5rem 0; border-bottom:1px solid var(--line);">
+                        <span style="color:var(--fg-faint);">Countries</span>
+                        <span style="font-weight:600;">
+                            {% for c in grant.countries.all %}
+                                {{ c.country_name }}{% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                        </span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; padding:0.5rem 0;">
+                        <span style="color:var(--fg-faint);">Fields</span>
+                        <span style="font-weight:600; text-align:right;">
+                            {% for f in grant.fields.all %}
+                                {{ f.field_name }}{% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                {% if user.is_authenticated %}
+                    <button class="btn btn-primary" 
+                        style="width:100%; margin-bottom:0.75rem;" 
+                        data-grant-id="{{ grant.pk }}"
+                        onclick="saveGrant(this)">
+                        Save & track
+                    </button>
+                    <a href="/assistant/?grant={{ grant.pk }}" style="text-decoration:none;">
+                        <button class="btn btn-ghost" style="width:100%; margin-bottom:0.75rem;">
+                            Draft my application
+                        </button>
+                    </a>
+                {% else %}
+                    <a href="{% url 'login' %}" style="text-decoration:none;">
+                        <button class="btn btn-primary" style="width:100%; margin-bottom:0.75rem;">
+                            Sign in to save & track
+                        </button>
+                    </a>
+                {% endif %}
+
+                <!-- Visit Source -->
+                <div style="text-align:center;">
+                    <a href="{{ grant.source_url }}" target="_blank" style="color:var(--fg-faint); font-size:0.85rem; text-decoration:none;">
+                        Visit official source 
+                    </a>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+
+    // --------------------------------------------------------
+    // Save & track grant via AJAX
+    // --------------------------------------------------------
+    function saveGrant(grantId, btn) {
+        fetch(`/applications/save/${grantId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest',
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.saved) {
+                btn.textContent = 'Saved ';
+                btn.classList.add('saved');
+            } else {
+                btn.textContent = 'Save & track →';
+                btn.classList.remove('saved');
+            }
+        });
+    }
+
+    // --------------------------------------------------------
+    // Get CSRF token from cookies
+    // --------------------------------------------------------
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            document.cookie.split(';').forEach(cookie => {
+                cookie = cookie.trim();
+                if (cookie.startsWith(name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.slice(name.length + 1));
+                }
+            });
+        }
+        return cookieValue;
+    }
+
+</script>
+{% endblock %}

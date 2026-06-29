@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delete Grant — Wajha{% endblock %}
+
+{% block content %}
+
+<div style="display:flex; min-height:calc(100vh - 60px);">
+
+    <!-- -------------------------------------------------------- -->
+    <!-- Sidebar -->
+    <!-- -------------------------------------------------------- -->
+    <aside style="width:220px; min-width:220px; padding:2rem 1.25rem; border-right:1px solid var(--line);">
+        <div class="eyebrow" style="margin-bottom:1rem;">ADMIN</div>
+        <nav style="display:flex; flex-direction:column; gap:0.25rem;">
+            <a href="{% url 'grants:admin_grants' %}" style="text-decoration:none;">
+                <div style="padding:0.6rem 0.75rem; border-radius:8px; background:var(--orange-dim); color:var(--orange); font-weight:600;">
+                    ● Grants
+                </div>
+            </a>
+            <a href="/accounts/manage/users/" style="text-decoration:none;">
+                <div style="padding:0.6rem 0.75rem; border-radius:8px; color:var(--fg-faint);">
+                    ◇ Users
+                </div>
+            </a>
+            <a href="/applications/manage/" style="text-decoration:none;">
+                <div style="padding:0.6rem 0.75rem; border-radius:8px; color:var(--fg-faint);">
+                    □ Applications
+                </div>
+            </a>
+            <a href="#" style="text-decoration:none;">
+                <div style="padding:0.6rem 0.75rem; border-radius:8px; color:var(--fg-faint);">
+                    — API & docs
+                </div>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- -------------------------------------------------------- -->
+    <!-- Main Content -->
+    <!-- -------------------------------------------------------- -->
+    <main style="flex:1; padding:2rem; display:flex; align-items:center; justify-content:center;">
+
+        <div style="max-width:480px; width:100%; border:1px solid var(--line); border-radius:16px; padding:2rem; text-align:center;">
+
+            <!-- Icon -->
+            <div style="font-size:2.5rem; margin-bottom:1rem;">🗑️</div>
+
+            <!-- Title -->
+            <h2 style="font-size:1.25rem; font-weight:700; margin-bottom:0.5rem;">
+                Delete this grant?
+            </h2>
+
+            <!-- Grant Info -->
+            <div style="background:var(--surface); border-radius:10px; padding:1rem; margin-bottom:1.5rem;">
+                <div style="font-weight:600; margin-bottom:0.25rem;">{{ grant.title }}</div>
+                <div style="color:var(--fg-faint); font-size:0.85rem;">{{ grant.organization }}</div>
+            </div>
+
+            <!-- Warning -->
+            <div style="color:var(--fg-faint); font-size:0.9rem; margin-bottom:2rem;">
+                This action cannot be undone. All related data will be permanently removed.
+            </div>
+
+            <!-- Buttons -->
+            <form method="POST">
+                {% csrf_token %}
+                <div style="display:flex; gap:0.75rem; justify-content:center;">
+                    <a href="{% url 'grants:admin_grants' %}" style="text-decoration:none;">
+                        <button type="button" class="btn btn-ghost">
+                            Cancel
+                        </button>
+                    </a>
+                    <button type="submit" style="background:red; color:#fff; border:none; padding:0.6rem 1.5rem; border-radius:8px; font-weight:600; cursor:pointer;">
+                        Yes, delete
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </main>
+</div>
+
+{% endblock %}

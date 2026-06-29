@@ -53,7 +53,7 @@ def grant_list(request):
         'page_obj': page_obj,
         'total_count': total,
     }
-    return render(request, 'grants/list.html', context)
+    return render(request, 'grants/templates/list.html', context)
 
 
 def grant_detail(request, pk):

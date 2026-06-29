@@ -1,0 +1,272 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ action }} Grant — Wajha{% endblock %}
+
+{% block content %}
+<style>
+    /* تحسين شكل حقول الإدخال القادمة من دجانجو تلقائياً */
+    form input[type="text"], form input[type="url"], form input[type="date"], form textarea, form select {
+        width: 100%;
+        padding: 0.65rem 0.85rem;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background-color: transparent;
+        color: var(--fg);
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        box-sizing: border-box;
+    }
+    form input:focus, form textarea:focus, form select:focus {
+        outline: none;
+        border-color: var(--orange, #ff6b00);
+        box-shadow: 0 0 0 3px var(--orange-dim, rgba(255, 107, 0, 0.15));
+    }
+    /* تأثير تمرير الماوس على القائمة الجانبية */
+    .sidebar-link {
+        display: flex;
+        align-items: center;
+        padding: 0.65rem 0.85rem;
+        border-radius: 8px;
+        color: var(--fg-faint);
+        font-weight: 500;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+    }
+    .sidebar-link:hover {
+        background: var(--line);
+        color: var(--fg);
+    }
+    .sidebar-link.active {
+        background: var(--orange-dim);
+        color: var(--orange);
+        font-weight: 600;
+    }
+</style>
+
+<div style="display:flex; min-height:calc(100vh - 60px); background-color: transparent;">
+
+    <aside style="width:240px; min-width:240px; padding:2.5rem 1.5rem; border-right:1px solid var(--line);">
+        <div class="eyebrow" style="margin-bottom:1.25rem; letter-spacing: 0.05em; font-size: 0.8rem; opacity: 0.6;">ADMIN CONTROL</div>
+        <nav style="display:flex; flex-direction:column; gap:0.35rem;">
+            <a href="{% url 'grants:admin_grants' %}" style="text-decoration:none;">
+                <div class="sidebar-link active">
+                     Grants
+                </div>
+            </a>
+            <a href="/accounts/manage/users/" style="text-decoration:none;">
+                <div class="sidebar-link">
+                     Users
+                </div>
+            </a>
+            <a href="/applications/manage/" style="text-decoration:none;">
+                <div class="sidebar-link">
+                    Applications
+                </div>
+            </a>
+            <a href="#" style="text-decoration:none;">
+                <div class="sidebar-link">
+                    API & docs
+                </div>
+            </a>
+        </nav>
+    </aside>
+
+    <main style="flex:1; padding:2.5rem 3rem; max-width:850px; box-sizing: border-box;">
+
+        <div style="display:flex; align-items:center; justify-content: space-between; margin-bottom:2.5rem;">
+            <div style="display:flex; align-items:center; gap:0.75rem;">
+                <h2 style="font-size:1.75rem; font-weight:700; letter-spacing: -0.02em; margin:0;">{{ action }} Grant</h2>
+            </div>
+            <a href="{% url 'grants:admin_grants' %}" style="text-decoration:none; color:var(--fg-faint); font-size:0.9rem; display:flex; align-items:center; gap:4px; transition: color 0.2s;" onmouseover="this.style.color='var(--fg)'" onmouseout="this.style.color='var(--fg-faint)'">
+                ← Back to list
+            </a>
+        </div>
+
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div style="border:1px solid var(--line); border-radius:14px; padding:1.75rem; margin-bottom:1.75rem; background: var(--bg-card, transparent);">
+                <h3 style="font-size:1.1rem; font-weight:600; margin-top:0; margin-bottom:1.5rem; color:var(--fg); display:flex; align-items:center; gap:8px;">
+                    Basic Information
+                </h3>
+
+                <div style="margin-bottom:1.25rem;">
+                    <label style="display:block; font-size:0.85rem; font-weight:500; color:var(--fg-faint); margin-bottom:0.45rem;">
+                        Title <span style="color:var(--orange);">*</span>
+                    </label>
+                    {{ form.title }}
+                    {% if form.title.errors %}
+                        <div style="color:#ff4a4a; font-size:0.8rem; margin-top:0.4rem; background:rgba(255,74,74,0.1); padding:0.4rem 0.75rem; border-radius:6px;">
+                            {{ form.title.errors.0 }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div style="margin-bottom:1.25rem;">
+                    <label style="display:block; font-size:0.85rem; font-weight:500; color:var(--fg-faint); margin-bottom:0.45rem;">
+                        Organization <span style="color:var(--orange);">*</span>
+                    </label>
+                    {{ form.organization }}
+                    {% if form.organization.errors %}
+                        <div style="color:#ff4a4a; font-size:0.8rem; margin-top:0.4rem; background:rgba(255,74,74,0.1); padding:0.4rem 0.75rem; border-radius:6px;">
+                            {{ form.organization.errors.0 }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div style="margin-bottom:1.25rem;">
+                    <label style="display:block; font-size:0.85rem; font-weight:500; color:var(--fg-faint); margin-bottom:0.45rem;">
+                        Description <span style="color:var(--orange);">*</span>
+                    </label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                        <div style="color:#ff4a4a; font-size:0.8rem; margin-top:0.4rem; background:rgba(255,74,74,0.1); padding:0.4rem 0.75rem; border-radius:6px;">
+                            {{ form.description.errors.0 }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem;">
+                    <div>
+                        <label style="display:block; font-size:0.85rem; font-weight:500; color:var(--fg-faint); margin-bottom:0.45rem;">
+                            Funding Type <span style="color:var(--orange);">*</span>
+                        </label>
+                        {{ form.funding_type }}
+                        {% if form.funding_type.errors %}
+                            <div style="color:#ff4a4a; font-size:0.8rem; margin-top:0.4rem; background:rgba(255,74,74,0.1); padding:0.4rem 0.75rem; border-radius:6px;">
+                                {{ form.funding_type.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label style="display:block; font-size:0.85rem; font-weight:500; color:var(--fg-faint); margin-bottom:0.45rem;">
+                            Deadline <span style="color:var(--orange);">*</span>
+                        </label>
+                        {{ form.deadline }}
+                        {% if form.deadline.errors %}
+                            <div style="color:#ff4a4a; font-size:0.8rem; margin-top:0.4rem; background:rgba(255,74,74,0.1); padding:0.4rem 0.75rem; border-radius:6px;">
+                                {{ form.deadline.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div style="border:1px solid var(--line); border-radius:14px; padding:1.75rem; margin-bottom:1.75rem; background: var(--bg-card, transparent);">
+                <h3 style="font-size:1.1rem; font-weight:600; margin-top:0; margin-bottom:1.5rem; color:var(--fg); display:flex; align-items:center; gap:8px;">
+                    Eligibility Requirements
+                </h3>
+
+                <div style="margin-bottom:1.25rem;">
+                    <label style="display:block; font-size:0.85rem; font-weight:500; color:var(--fg-faint); margin-bottom:0.45rem;">
+                        Eligibility Text <span style="color:var(--orange);">*</span>
+                    </label>
+                    {{ form.eligibility_text }}
+                    {% if form.eligibility_text.errors %}
+                        <div style="color:#ff4a4a; font-size:0.8rem; margin-top:0.4rem; background:rgba(255,74,74,0.1); padding:0.4rem 0.75rem; border-radius:6px;">
+                            {{ form.eligibility_text.errors.0 }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label style="display:flex; justify-content:space-between; align-items:center; font-size:0.85rem; font-weight:500; color:var(--fg-faint); margin-bottom:0.45rem;">
+                        <span>AI Eligibility Summary</span>
+                        <span style="background:var(--indigo-dim); color:var(--indigo); font-size:0.7rem; padding:0.2rem 0.5rem; border-radius:6px; font-weight:600;">
+                            ✦ AI Auto/Manual
+                        </span>
+                    </label>
+                    {{ form.eligibility_summary }}
+                    {% if form.eligibility_summary.errors %}
+                        <div style="color:#ff4a4a; font-size:0.8rem; margin-top:0.4rem; background:rgba(255,74,74,0.1); padding:0.4rem 0.75rem; border-radius:6px;">
+                            {{ form.eligibility_summary.errors.0 }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div style="border:1px solid var(--line); border-radius:14px; padding:1.75rem; margin-bottom:1.75rem; background: var(--bg-card, transparent);">
+                <h3 style="font-size:1.1rem; font-weight:600; margin-top:0; margin-bottom:1.5rem; color:var(--fg); display:flex; align-items:center; gap:8px;">
+                    Classification Tags
+                </h3>
+
+                <div style="margin-bottom:1.25rem;">
+                    <label style="display:block; font-size:0.85rem; font-weight:500; color:var(--fg-faint); margin-bottom:0.45rem;">
+                        Fields of Study
+                    </label>
+                    {{ form.fields_of_study }}
+                    <div style="color:var(--fg-faint); font-size:0.75rem; margin-top:0.4rem; opacity:0.8;">
+                        ℹ {{ form.fields_of_study.help_text }}
+                    </div>
+                </div>
+
+                <div style="margin-bottom:1.25rem;">
+                    <label style="display:block; font-size:0.85rem; font-weight:500; color:var(--fg-faint); margin-bottom:0.45rem;">
+                        Degree Levels
+                    </label>
+                    <div style="display:flex; gap:1rem; flex-wrap:wrap; padding: 0.25rem 0;">
+                        {{ form.degree_levels }}
+                    </div>
+                </div>
+
+                <div>
+                    <label style="display:block; font-size:0.85rem; font-weight:500; color:var(--fg-faint); margin-bottom:0.45rem;">
+                        Eligible Countries
+                    </label>
+                    {{ form.countries }}
+                    <div style="color:var(--fg-faint); font-size:0.75rem; margin-top:0.4rem; opacity:0.8;">
+                        ℹ {{ form.countries.help_text }}
+                    </div>
+                </div>
+            </div>
+
+            <div style="border:1px solid var(--line); border-radius:14px; padding:1.75rem; margin-bottom:2rem; background: var(--bg-card, transparent);">
+                <h3 style="font-size:1.1rem; font-weight:600; margin-top:0; margin-bottom:1.5rem; color:var(--fg); display:flex; align-items:center; gap:8px;">
+                     Source & Status
+                </h3>
+
+                <div style="margin-bottom:1.25rem;">
+                    <label style="display:block; font-size:0.85rem; font-weight:500; color:var(--fg-faint); margin-bottom:0.45rem;">
+                        Source URL <span style="color:var(--orange);">*</span>
+                    </label>
+                    {{ form.source_url }}
+                    {% if form.source_url.errors %}
+                        <div style="color:#ff4a4a; font-size:0.8rem; margin-top:0.4rem; background:rgba(255,74,74,0.1); padding:0.4rem 0.75rem; border-radius:6px;">
+                            {{ form.source_url.errors.0 }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label style="display:block; font-size:0.85rem; font-weight:500; color:var(--fg-faint); margin-bottom:0.45rem;">
+                        Status
+                    </label>
+                    {{ form.status }}
+                    {% if form.status.errors %}
+                        <div style="color:#ff4a4a; font-size:0.8rem; margin-top:0.4rem; background:rgba(255,74,74,0.1); padding:0.4rem 0.75rem; border-radius:6px;">
+                            {{ form.status.errors.0 }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if form.non_field_errors %}
+                <div style="background:rgba(255,74,74,0.15); color:#ff4a4a; padding:1rem; border-radius:10px; margin-bottom:1.5rem; font-size:0.9rem; border: 1px solid rgba(255,74,74,0.2);">
+                    ⚠️ {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <div style="display:flex; gap:1rem; justify-content:flex-end; align-items:center; border-top: 1px solid var(--line); padding-top: 1.5rem;">
+                <a href="{% url 'grants:admin_grants' %}" style="text-decoration:none;">
+                    <button type="button" class="btn btn-ghost" style="padding:0.65rem 1.25rem; border-radius:8px; cursor:pointer;">Cancel</button>
+                </a>
+                <button type="submit" class="btn btn-primary" style="padding:0.65rem 1.5rem; border-radius:8px; font-weight:600; cursor:pointer;">
+                    {{ action }} Grant
+                </button>
+            </div>
+
+        </form>
+    </main>
+</div>
+{% endblock %}

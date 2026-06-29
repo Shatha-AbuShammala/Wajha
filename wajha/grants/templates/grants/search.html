@@ -1,0 +1,324 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Search Grants — Wajha{% endblock %}
+
+{% block content %}
+<section class="page active">
+  <div class="browse-shell">
+
+    <!-- ═══ FILTERS SIDEBAR ═══ -->
+    <aside class="filters-panel">
+
+      <div class="filter-group">
+        <label class="gl">Degree Level</label>
+        <label class="check-row">
+          <input type="checkbox" name="degree" value="bachelor"> Bachelor
+        </label>
+        <label class="check-row">
+          <input type="checkbox" name="degree" value="master"> Master
+        </label>
+        <label class="check-row">
+          <input type="checkbox" name="degree" value="phd"> PhD
+        </label>
+        <label class="check-row">
+          <input type="checkbox" name="degree" value="diploma"> Diploma
+        </label>
+      </div>
+
+      <div class="filter-group">
+        <label class="gl">Country</label>
+        <select class="select-field" id="countryFilter">
+          <option value="">Any</option>
+          {% for c in all_countries %}
+            <option value="{{ c }}">{{ c }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label class="gl">Field of Study</label>
+        <select class="select-field" id="fieldFilter">
+          <option value="">Any</option>
+          {% for f in all_fields %}
+            <option value="{{ f }}">{{ f }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label class="gl">Deadline Within</label>
+        <div class="range-row">
+          <input type="range" min="1" max="365" value="365" id="deadlineSlider">
+          <div class="range-label" id="deadlineLabel">≤ 365 days</div>
+        </div>
+      </div>
+
+      <button class="btn btn-ghost btn-block" id="clearBtn" style="margin-top:8px;">
+        Clear all
+      </button>
+
+    </aside>
+
+    <!-- ═══ RESULTS PANEL ═══ -->
+    <div>
+
+      <!-- Search bar -->
+      <div class="search-top">
+        <div class="search-bar">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+               viewBox="0 0 24 24" style="color:var(--fg-faint); flex-shrink:0;">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input type="text" id="searchInput"
+                 placeholder="Search by title or organization..."
+                 autocomplete="off">
+          <span class="live-tag">
+            <span class="live-dot"></span> Live
+          </span>
+        </div>
+      </div>
+
+      <!-- Results count -->
+      <div class="results-head">
+        <div class="results-count" id="resultsCount">
+          <b>{{ total_count }}</b> grant{{ total_count|pluralize }} match — sorted by deadline
+        </div>
+      </div>
+
+      <!-- Results list -->
+      <div class="list-results" id="resultsList">
+        {% for grant in page_obj %}
+        {% with degrees=grant.degree_levels.all %}
+        {% with first_degree=degrees.first %}
+
+        <a href="{% url 'grants:detail' grant.pk %}"
+           class="lcard"
+           data-degree="{% if first_degree %}{{ first_degree.degree|lower }}{% endif %}"
+           style="text-decoration:none; color:inherit;">
+
+          <div class="lcard-thumb">
+            {{ grant.organization|slice:":2"|upper }}
+          </div>
+
+          <div class="lcard-body">
+            <h4>{{ grant.title }}</h4>
+            <div class="meta">
+              {{ grant.organization }}
+              {% for country in grant.countries.all|slice:":1" %}
+                · {{ country.country_name }}
+              {% endfor %}
+            </div>
+            <div class="lcard-tags">
+              {% if first_degree %}
+                <span class="pill pill-level">{{ first_degree.get_degree_display }}</span>
+              {% endif %}
+              {% for field in grant.fields.all|slice:":1" %}
+                <span class="tag">{{ field.field_name }}</span>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="lcard-right">
+            {% with days=grant.days_until_deadline %}
+              <div class="deadline {% if days <= 14 %}urgent{% elif days <= 30 %}urgent{% endif %}">
+                <span class="dot"></span>
+                 {{ days }} day{{ days|pluralize }} left
+              </div>
+            {% endwith %}
+            <button class="save-btn"
+              type="button"
+              onclick="event.preventDefault(); saveGrant(this)"
+              data-grant-id="{{ grant.pk }}">
+              Save +
+            </button>
+          </div>
+
+        </a>
+
+        {% endwith %}
+        {% endwith %}
+        {% endfor %}
+
+        <!-- Empty state -->
+        <div id="emptyState" style="display:none; text-align:center; padding:80px 0; color:var(--fg-faint);">
+          <div style="font-size:40px; margin-bottom:16px;">🔍</div>
+          <p style="font-size:15px;">No grants match your filters.</p>
+          <p style="font-size:13px; margin-top:6px;">Clear filters</p>
+        </div>
+
+      </div>
+
+      <!-- Pagination -->
+      {% if page_obj.has_other_pages %}
+      <div style="display:flex; justify-content:center; gap:6px; margin-top:32px;" id="pagination">
+        {% if page_obj.has_previous %}
+          <a class="btn btn-ghost btn-sm" href="?page={{ page_obj.previous_page_number }}">← Prev</a>
+        {% endif %}
+        {% for num in page_obj.paginator.page_range %}
+          {% if page_obj.number == num %}
+            <button class="btn btn-sm" style="background:var(--fg);color:var(--bg);">{{ num }}</button>
+          {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <a class="btn btn-ghost btn-sm" href="?page={{ num }}">{{ num }}</a>
+          {% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}
+          <a class="btn btn-ghost btn-sm" href="?page={{ page_obj.next_page_number }}">Next →</a>
+        {% endif %}
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+</section>
+
+<!-- Toast -->
+<div id="toast" style="
+  position:fixed; bottom:24px; right:24px;
+  background:var(--fg); color:var(--bg);
+  padding:12px 20px; border-radius:10px;
+  font-size:14px; font-weight:500;
+  box-shadow:var(--shadow);
+  opacity:0; transform:translateY(12px);
+  transition:all .25s; z-index:9999;
+  pointer-events:none;" >
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const searchInput   = document.getElementById('searchInput');
+  const degreeBoxes   = document.querySelectorAll('input[name="degree"]');
+  const countryFilter = document.getElementById('countryFilter');
+  const fieldFilter   = document.getElementById('fieldFilter');
+  const slider        = document.getElementById('deadlineSlider');
+  const sliderLabel   = document.getElementById('deadlineLabel');
+  const resultsList   = document.getElementById('resultsList');
+  const resultsCount  = document.getElementById('resultsCount');
+  const emptyState    = document.getElementById('emptyState');
+
+  /* ── Slider label ── */
+  slider.addEventListener('input', () => {
+    sliderLabel.textContent = `≤ ${slider.value} days`;
+    fetchResults();
+  });
+
+  /* ── Debounce ── */
+  let timer;
+  function debounce(fn, ms=320) {
+    clearTimeout(timer);
+    timer = setTimeout(fn, ms);
+  }
+
+  searchInput.addEventListener('input', () => debounce(fetchResults));
+  degreeBoxes.forEach(cb => cb.addEventListener('change', fetchResults));
+  countryFilter.addEventListener('change', fetchResults);
+  fieldFilter.addEventListener('change', fetchResults);
+
+  /* ── Clear ── */
+  document.getElementById('clearBtn').addEventListener('click', () => {
+    searchInput.value = '';
+    degreeBoxes.forEach(cb => cb.checked = false);
+    countryFilter.value = '';
+    fieldFilter.value = '';
+    slider.value = 365;
+    sliderLabel.textContent = '≤ 365 days';
+    fetchResults();
+  });
+
+  /* ── AJAX fetch ── */
+  function fetchResults() {
+    const degrees = [...degreeBoxes]
+      .filter(cb => cb.checked)
+      .map(cb => cb.value);
+
+    const params = new URLSearchParams({
+      format: 'json',
+      query:          searchInput.value,
+      country:        countryFilter.value,
+      field_of_study: fieldFilter.value,
+      deadline_within: slider.value,
+    });
+    degrees.forEach(d => params.append('degree_level', d));
+
+    fetch(`{% url 'grants:search' %}?${params}`, {
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json())
+    .then(data => renderResults(data));
+  }
+
+  /* ── Render ── */
+  function renderResults(data) {
+    resultsCount.innerHTML = `<b>${data.count}</b> grant${data.count !== 1 ? 's' : ''} match — sorted by deadline`;
+
+    const cards = data.grants.map(g => {
+      const urgent = g.days_left <= 14 ? 'urgent' : g.days_left <= 30 ? 'urgent' : '';
+      return `
+        <a href="${g.url}" class="lcard" style="text-decoration:none;color:inherit;">
+          <div class="lcard-thumb">${g.organization.slice(0,2).toUpperCase()}</div>
+          <div class="lcard-body">
+            <h4>${g.title}</h4>
+            <div class="meta">${g.organization}</div>
+            <div class="lcard-tags">
+              ${g.degree_levels.map(d => `<span class="pill pill-level">${d}</span>`).join('')}
+              ${g.countries.map(c => `<span class="tag">${c}</span>`).join('')}
+            </div>
+          </div>
+          <div class="lcard-right">
+            <div class="deadline ${urgent}">
+              <span class="dot"></span>  ${g.days_left} days left
+            </div>
+            <button class="save-btn" onclick="event.preventDefault();toggleSave(this,${g.id})">
+              Save +
+            </button>
+          </div>
+        </a>`;
+    }).join('');
+
+    resultsList.innerHTML = cards || '';
+    emptyState.style.display = data.count === 0 ? 'block' : 'none';
+    if (data.count === 0) resultsList.appendChild(emptyState);
+  }
+
+  /* ── Toast ── */
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.opacity = '1';
+    t.style.transform = 'translateY(0)';
+    setTimeout(() => {
+      t.style.opacity = '0';
+      t.style.transform = 'translateY(12px)';
+    }, 2800);
+  }
+
+    /* ── Save ── */
+  const isAuthenticated = "{{ user.is_authenticated|yesno:'true,false' }}" === 'true';
+
+    if (!isAuthenticated) {
+        window.location.href = "{% url 'login' %}";
+        return;
+    }
+
+    fetch(`/applications/save/${grantId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'X-Requested-With': 'XMLHttpRequest',
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.saved) {
+        btn.classList.add('saved');
+        btn.textContent = 'Saved ';
+        showToast('Grant saved!');
+      } else {
+        btn.classList.remove('saved');
+        btn.textContent = 'Save +';
+        showToast('Removed from saved.');
+      }
+    });
+</script>
+{% endblock %}
