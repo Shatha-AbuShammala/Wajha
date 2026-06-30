@@ -1,56 +1,71 @@
 ﻿<!DOCTYPE html>
 {% load static %}
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{% block title %}Wajha — Find your direction{% endblock %}</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{% static 'accounts/css/wajha-design.css' %}">
-{% block extra_head %}{% endblock %}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Wajha — Find your direction{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'accounts/css/wajha-design.css' %}">
+  {% block extra_head %}{% endblock %}
 </head>
+
 <body>
 
   <header class="topbar">
-    <a href="/" class="brand" style="text-decoration:none; color:var(--fg);">
-      <div class="brand-mark">W</div>
+    <a href="{% url 'landing' %}" class="brand" style="text-decoration:none; color:var(--fg);">
+      <img src="{% static 'accounts/img/wajha_logo.png' %}" alt="Wajha"
+        style="width:36px;height:36px;border-radius:11px;">
       Wajha
     </a>
+
     <nav class="nav-pages" id="navPages">
-      <a href="/"><button type="button">Browse</button></a>
-      <a href="/search/"><button type="button">Search</button></a>
-      <a href="/matches/"><button type="button">Matches</button></a>
+      <a href="/search/"><button type="button" {% if request.resolver_match.url_name == 'search' %}class="active"{% endif %}>Search</button></a>
+
       {% if user.is_authenticated %}
-        <a href="/assistant/"><button type="button">Assistant</button></a>
-        <a href="/dashboard/"><button type="button">Dashboard</button></a>
-        <a href="/accounts/profile/"><button type="button">Profile</button></a>
-      {% endif %}
-      {% if user.is_authenticated and user.role == "admin" %}
-        <a href="/admin-panel/"><button type="button">Admin</button></a>
-      {% endif %}
-      {% if not user.is_authenticated %}
-        <a href="{% url 'login' %}"><button type="button">Sign in</button></a>
-      {% else %}
+        <a href="/matches/"><button type="button" {% if request.resolver_match.url_name == 'matches' %}class="active"{% endif %}>Matches</button></a>
+        <a href="/assistant/"><button type="button" {% if request.resolver_match.url_name == 'assistant' %}class="active"{% endif %}>Assistant</button></a>
+        <a href="/dashboard/"><button type="button" {% if request.resolver_match.url_name == 'dashboard' %}class="active"{% endif %}>Dashboard</button></a>
+        <a href="{% url 'profile' %}"><button type="button" {% if request.resolver_match.url_name == 'profile' %}class="active"{% endif %}>Profile</button></a>
+
+        {% if user.role == "admin" or user.is_staff %}
+          <a href="{% url 'admin_users' %}"><button type="button" {% if request.resolver_match.url_name == 'admin_users' %}class="active"{% endif %}>Admin</button></a>
+        {% endif %}
+
         <form method="post" action="{% url 'logout' %}" style="display:inline;">
           {% csrf_token %}
           <button type="submit" id="logoutBtn">Log out</button>
         </form>
+      {% else %}
+        <a href="{% url 'login' %}"><button type="button" {% if request.resolver_match.url_name == 'login' %}class="active"{% endif %}>Sign in</button></a>
       {% endif %}
     </nav>
+
     <div class="topbar-right">
       <button class="icon-btn" id="themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode">
-        <svg id="iconSun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+        <svg id="iconSun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="4" />
+          <path
+            d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+        </svg>
       </button>
-      {% if user.is_authenticated %}
-        <a href="/accounts/profile/" class="avatar" title="Your profile" style="text-decoration:none;">
-          {{ user.username|slice:":2"|upper }}
-        </a>
-      {% endif %}
+     
     </div>
   </header>
 
   <main>
+    {% if request.GET.saved %}
+      <div style="max-width:1180px; margin: 16px auto 0; padding: 0 32px;">
+        <p class="helptext" style="color:var(--green); font-weight:600;">
+          ✓ Your profile has been successfully saved.
+        </p>
+      </div>
+    {% endif %}
+
     {% block content %}{% endblock %}
   </main>
 
@@ -68,4 +83,5 @@
   </script>
   {% block extra_js %}{% endblock %}
 </body>
+
 </html>

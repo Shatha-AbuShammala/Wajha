@@ -1,10 +1,7 @@
-
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.core.validators import RegexValidator
 from .models import User
-
-
 
 
 class SignUpForm(UserCreationForm):
@@ -37,14 +34,22 @@ class EmailAuthenticationForm(AuthenticationForm):
     }
 
 
+
 class ProfileSetupForm(forms.ModelForm):
     GPA_SCALE_CHOICES = (
         ('4', '4.0 Scale'),
         ('100', '100 Scale'),
     )
+
     gpa_scale = forms.ChoiceField(
         choices=GPA_SCALE_CHOICES, initial='4', required=False,
-        label="Average Assessment System"
+        label="Average Assessment System",
+        widget=forms.Select()
+    )
+
+    gpa = forms.DecimalField(
+        max_digits=5, decimal_places=2, required=False,
+        widget=forms.NumberInput(attrs={'step': '0.01'})
     )
 
     class Meta:
@@ -53,7 +58,10 @@ class ProfileSetupForm(forms.ModelForm):
                   'languages', 'cv_file')
         widgets = {
             'field_of_study': forms.TextInput(),
+            'degree_level': forms.Select(),
+            'country': forms.TextInput(),
             'languages': forms.TextInput(attrs={'placeholder': 'e.g. Arabic, English'}),
+            'cv_file': forms.FileInput(),
         }
 
     def clean(self):

@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Manage Users — Wajha{% endblock %}
+
+{% block content %}
+<div class="admin-shell">
+
+  <aside class="admin-side">
+    <div class="al">Admin</div>
+    <a href="#" class="admin-link">Grants</a>
+    <a href="#" class="admin-link active">Users</a>
+    <a href="#" class="admin-link">Applications</a>
+  </aside>
+
+  <main class="admin-main">
+
+    <div class="admin-top">
+      <h2>Users <span class="count">{{ total_users }} registered</span></h2>
+      <div class="admin-search">
+        <form method="get">
+          <input type="text" name="q" placeholder="Search by name or email..."
+                 value="{{ query }}">
+        </form>
+      </div>
+    </div>
+
+    <div class="admin-stats-grid">
+      <div class="admin-stat-card">
+        <div class="num">{{ total_users }}</div>
+        <div class="lbl">Total users</div>
+      </div>
+      <div class="admin-stat-card green">
+        <div class="num">+{{ new_this_month }}</div>
+        <div class="lbl">New this month</div>
+      </div>
+      <div class="admin-stat-card">
+        <div class="num">{{ active_profiles }}</div>
+        <div class="lbl">Active profiles</div>
+      </div>
+      <div class="admin-stat-card">
+        <div class="num">{{ avg_strength }}%</div>
+        <div class="lbl">Profile completion avg</div>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Field</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Joined</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in page_obj %}
+        <tr>
+          <td style="display:flex; align-items:center; gap:12px;">
+            <div class="avatar">{{ u.username|slice:":2"|upper }}</div>
+            <div>
+              <div style="font-weight:600;">{{ u.full_name|default:u.username }}</div>
+              <div style="font-size:12px; color:var(--fg-faint);">@{{ u.username }}</div>
+            </div>
+          </td>
+          <td>{{ u.field_of_study|default:"—" }}</td>
+          <td>
+            {% if u.role == "admin" %}
+              <span class="badge badge-role-admin">ADMIN</span>
+            {% else %}
+              <span class="badge badge-role-user">USER</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if u.is_active %}
+              <span class="badge badge-status-active">active</span>
+            {% else %}
+              <span class="badge badge-status-suspended">suspended</span>
+            {% endif %}
+          </td>
+          <td>{{ u.created_at|date:"M Y" }}</td>
+          <td class="admin-table-row-actions">
+            <form method="post" action="{% url 'toggle_admin' u.id %}" style="display:inline;">
+              {% csrf_token %}
+              <input type="hidden" name="q" value="{{ query }}">
+              <input type="hidden" name="page" value="{{ page_obj.number }}">
+              <button type="submit">
+                {% if u.role == "admin" %}Revoke{% else %}Make admin{% endif %}
+              </button>
+            </form>
+            <form method="post" action="{% url 'toggle_active' u.id %}" style="display:inline;">
+              {% csrf_token %}
+              <input type="hidden" name="q" value="{{ query }}">
+              <input type="hidden" name="page" value="{{ page_obj.number }}">
+              <button type="submit">
+                {% if u.is_active %}Suspend{% else %}Restore{% endif %}
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">No users found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="table-foot">
+      <span class="helptext">
+        Showing {{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ total_users }}
+      </span>
+      <div>
+        {% if page_obj.has_previous %}
+          <a href="?q={{ query }}&page={{ page_obj.previous_page_number }}">‹ Prev</a>
+        {% endif %}
+        {% if page_obj.has_next %}
+          <a href="?q={{ query }}&page={{ page_obj.next_page_number }}">Next ›</a>
+        {% endif %}
+      </div>
+    </div>
+
+  </main>
+</div>
+{% endblock %}
