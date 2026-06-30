@@ -4,195 +4,93 @@
 {% block title %}Manage Grants — Wajha{% endblock %}
 
 {% block content %}
+<div class="admin-shell">
 
-<div style="display:flex; min-height:calc(100vh - 60px);">
-
-    <!-- -------------------------------------------------------- -->
-    <!-- Sidebar -->
-    <!-- -------------------------------------------------------- -->
-    <aside style="width:220px; min-width:220px; padding:2rem 1.25rem; border-right:1px solid var(--line);">
-        <div class="eyebrow" style="margin-bottom:1rem;">ADMIN</div>
-        <nav style="display:flex; flex-direction:column; gap:0.25rem;">
-
-            <a href="{% url 'grants:admin_grants' %}" style="text-decoration:none;">
-                <div style="padding:0.6rem 0.75rem; border-radius:8px; background:var(--orange-dim); color:var(--orange); font-weight:600;">
-                     Grants
-                </div>
-            </a>
-
-            <a href="/accounts/manage/users/" style="text-decoration:none;">
-                <div style="padding:0.6rem 0.75rem; border-radius:8px; color:var(--fg-faint);">
-                     Users
-                </div>
-            </a>
-
-            <a href="/applications/manage/" style="text-decoration:none;">
-                <div style="padding:0.6rem 0.75rem; border-radius:8px; color:var(--fg-faint);">
-                    Applications
-                </div>
-            </a>
-
-            <a href="{% url 'grants:admin_grants' %}" style="text-decoration:none;">
-                <div style="padding:0.6rem 0.75rem; border-radius:8px; color:var(--fg-faint);">
-                     API & docs
-                </div>
-            </a>
-
-        </nav>
+    <aside class="admin-side">
+        <div class="al">Admin</div>
+        <a href="{% url 'grants:admin_grants' %}" class="admin-link ">Grants</a>
+        <a href="{% url 'admin_users' %}" class="admin-link ">Users</a>
+        <a href="#" class="admin-link ">Applications</a>
     </aside>
 
-    <!-- -------------------------------------------------------- -->
-    <!-- Main Content -->
-    <!-- -------------------------------------------------------- -->
-    <main style="flex:1; padding:2rem;">
+    <main class="admin-main">
 
-        <!-- Header -->
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem;">
-            <div style="display:flex; align-items:baseline; gap:0.75rem;">
-                <h2 style="font-size:1.5rem; font-weight:700;">Grants</h2>
-                <span style="color:var(--fg-faint); font-size:0.9rem;">{{ total_count }} total</span>
-            </div>
-            <div style="display:flex; gap:0.75rem; align-items:center;">
-                <!-- Search -->
-                <form method="GET" action="{% url 'grants:admin_grants' %}">
-                    <input
-                        type="text"
-                        name="q"
-                        value="{{ query }}"
-                        placeholder="Search grants..."
-                        style="padding:0.5rem 1rem; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--fg); width:200px;">
+        <div class="admin-top">
+            <h2>Grants <span class="count">{{ total_count }} total</span></h2>
+            <div class="admin-search" style="display:flex; gap:0.75rem; align-items:center;">
+                <form method="get">
+                    <input type="text" name="q" placeholder="Search grants..." value="{{ query }}">
                 </form>
-                <!-- Add Grant -->
                 <a href="{% url 'grants:create' %}" style="text-decoration:none;">
-                    <button class="btn btn-primary"> Add grant</button>
+                    <button type="button" class="btn btn-primary">+ Add grant</button>
                 </a>
             </div>
         </div>
 
-        <!-- -------------------------------------------------------- -->
-        <!-- Table -->
-        <!-- -------------------------------------------------------- -->
-        <div style="border:1px solid var(--line); border-radius:12px; overflow:hidden;">
-            <table style="width:100%; border-collapse:collapse;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Organisation</th>
+                    <th>Level</th>
+                    <th>Country</th>
+                    <th>Deadline</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for grant in page_obj %}
+                <tr>
+                    <td>
+                        <a href="{% url 'grants:detail' grant.pk %}" style="text-decoration:none; color:var(--fg); font-weight:600;">
+                            {{ grant.title|truncatechars:40 }}
+                        </a>
+                    </td>
+                    <td>{{ grant.organization|truncatechars:20 }}</td>
+                    <td>
+                        {% for d in grant.degree_levels.all %}
+                            <span class="badge badge-role-user">{{ d.get_degree_display }}</span>
+                        {% empty %}—{% endfor %}
+                    </td>
+                    <td>
+                        {% for c in grant.countries.all %}{{ c.country_name }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}
+                    </td>
+                    <td class="{% if grant.is_urgent %}urgent{% endif %}">
+                        {{ grant.deadline|date:"d M" }}
+                    </td>
+                    <td>
+                        {% if grant.status == 'published' %}
+                            <span class="badge badge-status-active">published</span>
+                        {% else %}
+                            <span class="badge badge-status-suspended">draft</span>
+                        {% endif %}
+                    </td>
+                    <td class="admin-table-row-actions">
+                        <a href="{% url 'grants:edit' grant.pk %}"><button type="button">Edit</button></a>
+                        <a href="{% url 'grants:delete' grant.pk %}"><button type="button">Delete</button></a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7">No grants found. <a href="{% url 'grants:create' %}">Add one now</a></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
 
-                <!-- Table Header -->
-                <thead>
-                    <tr style="background:var(--surface); border-bottom:1px solid var(--line);">
-                        <th style="padding:0.75rem 1rem; text-align:left; font-size:0.8rem; color:var(--fg-faint); font-weight:600; letter-spacing:0.05em;">TITLE</th>
-                        <th style="padding:0.75rem 1rem; text-align:left; font-size:0.8rem; color:var(--fg-faint); font-weight:600; letter-spacing:0.05em;">ORGANISATION</th>
-                        <th style="padding:0.75rem 1rem; text-align:left; font-size:0.8rem; color:var(--fg-faint); font-weight:600; letter-spacing:0.05em;">LEVEL</th>
-                        <th style="padding:0.75rem 1rem; text-align:left; font-size:0.8rem; color:var(--fg-faint); font-weight:600; letter-spacing:0.05em;">COUNTRY</th>
-                        <th style="padding:0.75rem 1rem; text-align:left; font-size:0.8rem; color:var(--fg-faint); font-weight:600; letter-spacing:0.05em;">DEADLINE</th>
-                        <th style="padding:0.75rem 1rem; text-align:left; font-size:0.8rem; color:var(--fg-faint); font-weight:600; letter-spacing:0.05em;">STATUS</th>
-                        <th style="padding:0.75rem 1rem; text-align:left; font-size:0.8rem; color:var(--fg-faint); font-weight:600; letter-spacing:0.05em;">ACTIONS</th>
-                    </tr>
-                </thead>
-
-                <!-- Table Body -->
-                <tbody>
-                    {% for grant in page_obj %}
-                    <tr style="border-bottom:1px solid var(--line); transition:background 0.15s;"
-                        onmouseover="this.style.background='var(--surface)'"
-                        onmouseout="this.style.background='transparent'">
-
-                        <!-- Title -->
-                        <td style="padding:0.85rem 1rem;">
-                            <a href="{% url 'grants:detail' grant.pk %}" style="text-decoration:none; color:var(--fg); font-weight:500;">
-                                {{ grant.title|truncatechars:40 }}
-                            </a>
-                        </td>
-
-                        <!-- Organization -->
-                        <td style="padding:0.85rem 1rem; color:var(--fg-faint);">
-                            {{ grant.organization|truncatechars:20 }}
-                        </td>
-
-                        <!-- Level -->
-                        <td style="padding:0.85rem 1rem;">
-                            {% for d in grant.degree_levels.all %}
-                                <span class="pill pill-level" style="font-size:0.75rem;">
-                                    {{ d.get_degree_display }}
-                                </span>
-                            {% empty %}
-                                <span style="color:var(--fg-faint);">—</span>
-                            {% endfor %}
-                        </td>
-
-                        <!-- Country -->
-                        <td style="padding:0.85rem 1rem; color:var(--fg-faint);">
-                            {% for c in grant.countries.all %}
-                                {{ c.country_name }}{% if not forloop.last %}, {% endif %}
-                            {% empty %}
-                                —
-                            {% endfor %}
-                        </td>
-
-                        <!-- Deadline -->
-                        <td style="padding:0.85rem 1rem;">
-                            <span class="{% if grant.is_urgent %}urgent{% endif %}" style="font-size:0.9rem;">
-                                {{ grant.deadline|date:"d M" }}
-                            </span>
-                        </td>
-
-                        <!-- Status -->
-                        <td style="padding:0.85rem 1rem;">
-                            {% if grant.status == 'published' %}
-                                <span style="background:var(--green-dim); color:var(--green); padding:0.2rem 0.6rem; border-radius:6px; font-size:0.8rem;">
-                                    Published
-                                </span>
-                            {% else %}
-                                <span style="background:var(--surface); color:var(--fg-faint); padding:0.2rem 0.6rem; border-radius:6px; font-size:0.8rem;">
-                                    Draft
-                                </span>
-                            {% endif %}
-                        </td>
-
-                        <!-- Actions -->
-                        <td style="padding:0.85rem 1rem;">
-                            <div style="display:flex; gap:0.75rem;">
-                                <a href="{% url 'grants:edit' grant.pk %}" style="color:var(--fg); text-decoration:none; font-size:0.9rem; font-weight:500;">
-                                    Edit
-                                </a>
-                                <a href="{% url 'grants:delete' grant.pk %}" style="color:red; text-decoration:none; font-size:0.9rem; font-weight:500;">
-                                    Delete
-                                </a>
-                            </div>
-                        </td>
-
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="7" style="padding:3rem; text-align:center; color:var(--fg-faint);">
-                            No grants found.
-                            <a href="{% url 'grants:create' %}">Add one now</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-
-            </table>
-        </div>
-
-        <!-- -------------------------------------------------------- -->
-        <!-- Pagination -->
-        <!-- -------------------------------------------------------- -->
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1rem; color:var(--fg-faint); font-size:0.85rem;">
-            <span>Showing {{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ total_count }}</span>
-            <div style="display:flex; gap:0.5rem;">
+        <div class="table-foot">
+            <span class="helptext">
+                Showing {{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ total_count }}
+            </span>
+            <div>
                 {% if page_obj.has_previous %}
-                    <a href="?page={{ page_obj.previous_page_number }}&q={{ query }}" class="btn btn-ghost" style="padding:0.4rem 0.75rem; font-size:0.85rem;">
-                        ‹ Prev
-                    </a>
+                    <a href="?q={{ query }}&page={{ page_obj.previous_page_number }}">‹ Prev</a>
                 {% endif %}
                 {% if page_obj.has_next %}
-                    <a href="?page={{ page_obj.next_page_number }}&q={{ query }}" class="btn btn-ghost" style="padding:0.4rem 0.75rem; font-size:0.85rem;">
-                        Next ›
-                    </a>
+                    <a href="?q={{ query }}&page={{ page_obj.next_page_number }}">Next ›</a>
                 {% endif %}
             </div>
         </div>
 
     </main>
 </div>
-
 {% endblock %}

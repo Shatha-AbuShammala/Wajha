@@ -29,12 +29,14 @@
       {% if user.is_authenticated %}
         <a href="/matches/"><button type="button" {% if request.resolver_match.url_name == 'matches' %}class="active"{% endif %}>Matches</button></a>
         <a href="/assistant/"><button type="button" {% if request.resolver_match.url_name == 'assistant' %}class="active"{% endif %}>Assistant</button></a>
-        <a href="{% url 'grants:admin_grants' %}"><button type="button" {% if request.resolver_match.url_name == 'dashboard' %}class="active"{% endif %}>Dashboard</button></a>
+        <a href="/dashboard/"><button type="button" {% if request.resolver_match.url_name == 'dashboard' %}class="active"{% endif %}>Dashboard</button></a>
         <a href="{% url 'profile' %}"><button type="button" {% if request.resolver_match.url_name == 'profile' %}class="active"{% endif %}>Profile</button></a>
 
         {% if user.role == "admin" or user.is_staff %}
-          <a href="{% url 'admin_users' %}"><button type="button" {% if request.resolver_match.url_name == 'admin_users' %}class="active"{% endif %}>Admin</button></a>
-        {% endif %}
+        <a href="{% url 'grants:admin_grants' %}">
+        <button>Admin</button>
+        </a>
+      {% endif %}
 
         <form method="post" action="{% url 'logout' %}" style="display:inline;">
           {% csrf_token %}
