@@ -7,10 +7,19 @@
 <div class="admin-shell">
 
   <aside class="admin-side">
-    <div class="al">Admin</div>
-    <a href="#" class="admin-link">Grants</a>
-    <a href="#" class="admin-link active">Users</a>
-    <a href="#" class="admin-link">Applications</a>
+  <div class="al">Admin</div>
+
+  <a href="{% url 'grants:admin_grants' %}" class="admin-link ">
+      Grants
+  </a>
+
+  <a href="{% url 'admin_users' %}" class="admin-link">
+      Users
+  </a>
+
+  <a href="#" class="admin-link">
+      Applications
+  </a>
   </aside>
 
   <main class="admin-main">
