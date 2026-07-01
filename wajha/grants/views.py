@@ -57,7 +57,7 @@ def grant_list(request):
         'page_obj': page_obj,
         'total_count': total,
     }
-    return render(request, 'grants/templates/list.html', context)
+    return render(request, 'grants/search.html', context)
 
 
 def grant_detail(request, pk):
@@ -69,11 +69,14 @@ def grant_detail(request, pk):
         pk=pk,
         status='published'
     )
+    back_url = request.GET.get('back', request.META.get('HTTP_REFERER', '/grants/'))
+
 
     context = {
         'grant': grant,
         'days_left': grant.days_until_deadline(),
         'is_urgent': grant.is_urgent(),
+        'back_url': back_url,
     }
     return render(request, 'grants/detail.html', context)
 

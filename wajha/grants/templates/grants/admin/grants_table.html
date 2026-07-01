@@ -44,7 +44,7 @@
                 {% for grant in page_obj %}
                 <tr>
                     <td>
-                        <a href="{% url 'grants:detail' grant.pk %}" style="text-decoration:none; color:var(--fg); font-weight:600;">
+                        <a href="{% url 'grants:detail' grant.pk %}?back={{ request.path }}" style="text-decoration:none; color:var(--fg); font-weight:600;">
                             {{ grant.title|truncatechars:40 }}
                         </a>
                     </td>
