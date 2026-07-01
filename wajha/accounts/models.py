@@ -2,7 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
 from django.db import models
-
+from django.core.validators import RegexValidator
 
 
 def validate_cv_file(file):
@@ -11,7 +11,10 @@ def validate_cv_file(file):
     if file.size > 5 * 1024 * 1024:   
         raise ValidationError('The file size must not exceed 5 megabytes.')
 
-
+full_name_validator = RegexValidator(
+    regex=r'^[A-Za-z\u0600-\u06FF]+(?: [A-Za-z\u0600-\u06FF]+)+$',
+    message="Please enter your full name (first and last) using letters only, with no numbers, dashes, or special characters."
+)
 class User(AbstractUser):
     ROLE_CHOICES = (
         ('student', 'Student'),
@@ -24,7 +27,7 @@ class User(AbstractUser):
     )     
     email = models.EmailField(unique=True)
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='student')
-    full_name = models.CharField(max_length=200, blank=True)
+    full_name = models.CharField(max_length=200, blank=True, validators=[full_name_validator])
     country = models.CharField(max_length=100, blank=True)
     field_of_study = models.CharField(max_length=150, blank=True)
     degree_level = models.CharField(max_length=20, choices=DEGREE_LEVEL_CHOICES, blank=True)

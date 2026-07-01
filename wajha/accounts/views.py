@@ -13,8 +13,61 @@ from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_POST
 from django.urls import reverse
 from urllib.parse import urlencode
+from django.template.loader import render_to_string
+from django.core.mail import EmailMultiAlternatives
 
 
+# ===================== EMAIL FUNCTIONS =====================
+
+def send_welcome_email(user, request):
+    subject = "Welcome to Wajha — Your account is ready"
+    site_url = request.build_absolute_uri('/')
+
+    context = {
+        'full_name': user.full_name,
+        'username': user.username,
+        'email': user.email,
+        'site_url': site_url,
+    }
+
+    html_content = render_to_string('accounts/emails/welcome_email.html', context)
+    text_content = render_to_string('accounts/emails/welcome_email.txt', context)
+
+    msg = EmailMultiAlternatives(
+        subject=subject,
+        body=text_content,
+        to=[user.email],
+    )
+    msg.attach_alternative(html_content, "text/html")
+    msg.send(fail_silently=True)
+
+
+def send_login_email(user, request):
+    subject = "New sign-in to your Wajha account"
+    password_reset_url = request.build_absolute_uri('/accounts/password-reset/')
+    login_time = timezone.now().strftime("%B %d, %Y at %I:%M %p UTC")
+
+    context = {
+        'full_name': user.full_name,
+        'username': user.username,
+        'email': user.email,
+        'login_time': login_time,
+        'password_reset_url': password_reset_url,
+    }
+
+    html_content = render_to_string('accounts/emails/login_email.html', context)
+    text_content = render_to_string('accounts/emails/login_email.txt', context)
+
+    msg = EmailMultiAlternatives(
+        subject=subject,
+        body=text_content,
+        to=[user.email],
+    )
+    msg.attach_alternative(html_content, "text/html")
+    msg.send(fail_silently=True)  # لو فشل الإيميل، ما يكسر تسجيل الدخول
+
+
+# ===================== PROFILE HELPERS =====================
 
 def calculate_profile_strength(user):
     """Weighted profile completeness score out of 100."""
@@ -50,12 +103,14 @@ def get_profile_gaps(user):
         gaps.append("Add your country to filter eligible grants correctly.")
     return gaps
 
+
+# ===================== AUTH VIEWS =====================
+
 def signup_view(request):
     if request.method == 'POST':
         form = SignUpForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
-            # لو الإيميل بقائمة الأدمن المعرّفة بـ settings.py، نعطيه صلاحية أدمن تلقائياً
             if user.email in getattr(settings, 'ADMIN_EMAILS', []):
                 user.role = 'admin'
                 user.is_staff = True
@@ -63,6 +118,7 @@ def signup_view(request):
                 user.role = 'student'
             user.save()
             login(request, user, backend='accounts.backends.EmailBackend')
+            send_welcome_email(user, request)  # ← إرسال إيميل الترحيب بعد الحفظ
             return redirect('profile_setup')
     else:
         form = SignUpForm()
@@ -76,11 +132,15 @@ class CustomLoginView(LoginView):
     def form_valid(self, form):
         response = super().form_valid(form)
         user = self.request.user
+
         # احتياطي: لو الإيميل بقائمة الأدمن بس الدور لسا مش متزامن
         if user.email in getattr(settings, 'ADMIN_EMAILS', []) and user.role != 'admin':
             user.role = 'admin'
             user.is_staff = True
             user.save(update_fields=['role', 'is_staff'])
+
+        send_login_email(user, self.request)  # ← إرسال إيميل تأكيد تسجيل الدخول
+
         return response
 
     def get_success_url(self):
@@ -93,6 +153,10 @@ class CustomLoginView(LoginView):
 def logout_view(request):
     logout(request)
     return redirect('login')
+
+
+# ===================== PROFILE VIEWS =====================
+
 @login_required
 def profile_setup_view(request):
     if request.method == 'POST':
@@ -101,9 +165,9 @@ def profile_setup_view(request):
             changed = form.has_changed()
             form.save()
             if changed:
-             return redirect('/accounts/profile/?saved=1')
+                return redirect('/accounts/profile/?saved=1')
             return redirect('profile')
-    else: 
+    else:
         form = ProfileSetupForm(instance=request.user)
 
     context = {
@@ -112,6 +176,8 @@ def profile_setup_view(request):
         'profile_gaps': get_profile_gaps(request.user),
     }
     return render(request, 'accounts/profile_setup.html', context)
+
+
 @login_required
 def profile_view(request):
     context = {
@@ -122,12 +188,14 @@ def profile_view(request):
     return render(request, 'accounts/profile.html', context)
 
 
+# ===================== ADMIN VIEWS =====================
+
 def is_admin_user(user):
     return user.is_authenticated and (user.role == 'admin' or user.is_staff)
 
 
 def _admin_users_redirect(request):
-    """Maintains the same search and page after any modification (comment/validity)."""
+    """Maintains the same search and page after any modification."""
     base = reverse('admin_users')
     params = {}
     if request.POST.get('q'):
@@ -212,3 +280,20 @@ def toggle_active_view(request, user_id):
     status = "suspended" if not target.is_active else "restored"
     messages.success(request, f"{target.username} has been {status}.")
     return redirect(_admin_users_redirect(request))
+
+
+@login_required
+@user_passes_test(is_admin_user, login_url='landing')
+@require_POST
+def delete_user_view(request, user_id):
+    from .models import User
+    target = get_object_or_404(User, id=user_id)
+
+    if target.id == request.user.id:
+        messages.error(request, "You cannot delete your own account.")
+        return redirect(_admin_users_redirect(request))
+
+    username = target.username
+    target.delete()
+    messages.success(request, f"User '{username}' and all associated data have been deleted.")
+    return redirect('admin_users')

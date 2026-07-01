@@ -4,10 +4,10 @@
 {% block title %}My Profile — Wajha{% endblock %}
 
 {% block content %}
-  
+
 <div class="profile-banner">
-   <div class="pb-glow"></div>  
-</div> 
+  <div class="pb-glow"></div>
+</div>
 
 <div class="profile-shell">
   <div class="profile-top">
@@ -26,9 +26,9 @@
   </div>
 
   {% if messages %}
-    {% for message in messages %}
-      <p class="helptext">{{ message }}</p>
-    {% endfor %}
+  {% for message in messages %}
+  <p class="helptext">{{ message }}</p>
+  {% endfor %}
   {% endif %}
 
   <div class="profile-grid">
@@ -56,9 +56,9 @@
           <span class="il">CV</span>
           <span class="iv">
             {% if profile_user.cv_file %}
-              <a href="{{ profile_user.cv_file.url }}" target="_blank" style="color:var(--green);">Uploaded ✓</a>
+            <a href="{{ profile_user.cv_file.url }}" target="_blank" style="color:var(--green);">Uploaded ✓</a>
             {% else %}
-              Not uploaded
+            Not uploaded
             {% endif %}
           </span>
         </div>
@@ -71,23 +71,51 @@
         </div>
         <div class="ps-pct">{{ profile_strength }}%</div>
         {% if profile_gaps %}
-          <ul style="text-align:left; margin-top:14px; font-size:13px; color:var(--fg-dim);">
-            {% for gap in profile_gaps %}
-              <li style="margin-bottom:6px;">• {{ gap }}</li>
-            {% endfor %}
-          </ul>
+        <ul style="text-align:left; margin-top:14px; font-size:13px; color:var(--fg-dim);">
+          {% for gap in profile_gaps %}
+          <li style="margin-bottom:6px;">• {{ gap }}</li>
+          {% endfor %}
+        </ul>
         {% endif %}
       </div>
     </div>
 
     <div>
       <div class="profile-tabs">
-       
+
         <span class="profile-tab">Documents</span>
       </div>
       <p style="color:var(--fg-faint); font-size:13.5px;">
-       All the files you upload will be saved here.
+        All the files you upload will be saved here.
       </p>
+      {% if profile_user.cv_file %}
+      <div class="doc-item">
+        <div class="doc-icon">
+          <i class="fa-regular fa-file-pdf"></i>
+        </div>
+        <div class="doc-body">
+          <div class="doc-name">CV / Resume</div>
+          <div class="doc-meta">PDF · Uploaded {{ profile_user.updated_at|date:"M d, Y" }}</div>
+        </div>
+        <div class="doc-actions">
+          <a href="{{ profile_user.cv_file.url }}" target="_blank" class="btn btn-ghost btn-sm">
+            <i class="fa-regular fa-eye"></i> View
+          </a>
+          <a href="{{ profile_user.cv_file.url }}" download class="btn btn-ghost btn-sm">
+            <i class="fa-regular fa-arrow-down-to-line"></i> Download
+          </a>
+        </div>
+      </div>
+      {% else %}
+      <div class="doc-empty">
+        <i class="fa-regular fa-file-arrow-up"></i>
+        <p>No documents uploaded yet.</p>
+        <a href="{% url 'profile_setup' %}" class="btn btn-ghost btn-sm" style="margin-top:10px;">
+          Upload CV →
+        </a>
+      </div>
+      {% endif %}
+
     </div>
 
   </div>

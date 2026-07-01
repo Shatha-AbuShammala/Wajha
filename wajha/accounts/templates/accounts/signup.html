@@ -46,29 +46,26 @@
                 {% endif %}
 
                 <div class="field">
-                    <label for="{{ form.username.id_for_label }}">Username</label>
-                    {{ form.username }}
-                    {% if form.username.errors %}<div style="color:#E5484D; font-size:12.5px; margin-top:6px;">{{
-                        form.username.errors.0 }}</div>{% endif %}
+                    <label for="{{ form.full_name.id_for_label }}">Full Name</label>
+                    {{ form.full_name }}
+                    {% if form.full_name.errors %}<div style="color:#E5484D; font-size:12.5px; margin-top:6px;">{{ form.full_name.errors.0 }}</div>{% endif %}
                 </div>
+
+           
                 <div class="field">
                     <label for="{{ form.email.id_for_label }}">Email</label>
                     {{ form.email }}
-                    {% if form.email.errors %}<div style="color:#E5484D; font-size:12.5px; margin-top:6px;">{{
-                        form.email.errors.0
-                        }}</div>{% endif %}
+                    {% if form.email.errors %}<div style="color:#E5484D; font-size:12.5px; margin-top:6px;">{{form.email.errors.0}}</div>{% endif %}
                 </div>
                 <div class="field">
                     <label for="{{ form.password1.id_for_label }}">Password</label>
                     {{ form.password1 }}
-                    {% if form.password1.errors %}<div style="color:#E5484D; font-size:12.5px; margin-top:6px;">{{
-                        form.password1.errors.0 }}</div>{% endif %}
+                    {% if form.password1.errors %}<div style="color:#E5484D; font-size:12.5px; margin-top:6px;">{{form.password1.errors.0 }}</div>{% endif %}
                 </div>
                 <div class="field">
                     <label for="{{ form.password2.id_for_label }}">Confirm password</label>
                     {{ form.password2 }}
-                    {% if form.password2.errors %}<div style="color:#E5484D; font-size:12.5px; margin-top:6px;">{{
-                        form.password2.errors.0 }}</div>{% endif %}
+                    {% if form.password2.errors %}<div style="color:#E5484D; font-size:12.5px; margin-top:6px;">{{form.password2.errors.0 }}</div>{% endif %}
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-block">Create account</button>
