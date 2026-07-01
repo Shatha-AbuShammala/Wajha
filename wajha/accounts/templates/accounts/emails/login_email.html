@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  body { margin:0; padding:0; background:#f8fafc; font-family:'Inter',Arial,sans-serif; }
+  .container { max-width:480px; margin:40px auto; background:#ffffff; border-radius:16px; overflow:hidden; border:1px solid #eaf0f7; }
+  .banner { background:linear-gradient(150deg,#183153,#162c69); padding:36px 32px; text-align:center; }
+  .banner h1 { color:#ffffff; font-size:20px; margin:0; font-weight:700; }
+  .banner p { color:rgba(255,255,255,0.7); font-size:13px; margin:8px 0 0; }
+  .body-content { padding:32px; }
+  .body-content p { color:#374151; font-size:15px; line-height:1.7; margin:0 0 16px; }
+  .info-box { background:#eaf0f7; border-radius:12px; padding:18px 20px; margin:20px 0; }
+  .info-row { display:flex; justify-content:space-between; font-size:13.5px; padding:7px 0; border-bottom:1px solid #d1dce8; }
+  .info-row:last-child { border-bottom:none; }
+  .info-row .lbl { color:#6b7280; }
+  .info-row .val { font-weight:600; color:#183153; }
+  .warning-box { background:#fff7ed; border:1px solid #fed7aa; border-radius:12px; padding:16px 20px; margin:20px 0; }
+  .warning-box p { color:#92400e; font-size:13.5px; margin:0; line-height:1.6; }
+  .cta-button { display:block; text-align:center; background:#e5484d; color:#ffffff !important; text-decoration:none; font-weight:600; font-size:14px; padding:13px; border-radius:11px; margin:20px 0 8px; }
+  .footer { text-align:center; padding:20px 32px 28px; border-top:1px solid #eaf0f7; }
+  .footer p { font-size:12px; color:#9ca3af; margin:4px 0; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="banner">
+      <h1>New sign-in to Wajha</h1>
+      <p>We noticed a new login to your account</p>
+    </div>
+    <div class="body-content">
+      <p>Hi {{ full_name|default:username }},</p>
+      <p>We're letting you know that your Wajha account was just signed into successfully.</p>
+      <div class="info-box">
+        <div class="info-row">
+          <span class="lbl">Account</span>
+          <span class="val">{{ email }}</span>
+        </div>
+        <div class="info-row">
+          <span class="lbl">Time</span>
+          <span class="val">{{ login_time }}</span>
+        </div>
+      </div>
+      <div class="warning-box">
+        <p>If this wasn't you, secure your account immediately by changing your password.</p>
+      </div>
+      <a href="{{ password_reset_url }}" class="cta-button">Secure my account</a>
+    </div>
+    <div class="footer">
+      <p>Wajha — Find your direction, one application at a time.</p>
+      <p>This is an automated security notification. Please do not reply.</p>
+    </div>
+  </div>
+</body>
+</html>

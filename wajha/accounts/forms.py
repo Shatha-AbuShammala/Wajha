@@ -2,21 +2,49 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.core.validators import RegexValidator
 from .models import User
+import re
 
 
 class SignUpForm(UserCreationForm):
     email = forms.EmailField(required=True)
-
+    full_name = forms.CharField(
+        max_length=200,
+        required=True,
+        label="Full Name",
+        widget=forms.TextInput(attrs={'placeholder': 'e.g. Simon Moon'})
+    )
     class Meta:
         model = User
-        fields = ('username', 'email', 'password1', 'password2')
-
+        fields = ('full_name', 'email', 'password1', 'password2')
+    def clean_full_name(self):
+        full_name = self.cleaned_data.get('full_name', '').strip()
+        validator = RegexValidator(
+            regex=r'^[A-Za-z\u0600-\u06FF]+(?: [A-Za-z\u0600-\u06FF]+)+$',
+            message="Please enter your full name (first and last) using letters only, with no numbers, dashes, or special characters."
+        )
+        validator(full_name)
+        return full_name
     def clean_email(self):
         email = self.cleaned_data.get('email')
         if User.objects.filter(email=email).exists():
             raise forms.ValidationError("This email address is already in use.")
         return email
+    def generate_username(self, full_name):
+        base = re.sub(r'\s+', '_', full_name.strip().lower())
+        base = re.sub(r'[^a-z_\u0600-\u06FF]', '', base)
+        username = base
+        counter = 1
+        while User.objects.filter(username=username).exists():
+            counter += 1
+            username = f"{base}{counter}"
+        return username
 
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.username = self.generate_username(self.cleaned_data['full_name'])
+        if commit:
+            user.save()
+        return user
 
 class EmailAuthenticationForm(AuthenticationForm):
     username = forms.EmailField(

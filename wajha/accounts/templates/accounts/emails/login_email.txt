@@ -1,0 +1,12 @@
+Hi {{ full_name|default:username }},
+
+A new sign-in was detected on your Wajha account.
+
+Account: {{ email }}
+Time: {{ login_time }}
+
+If this wasn't you, secure your account immediately:
+{{ password_reset_url }}
+
+— The Wajha Team
+This is an automated security notification.

@@ -1,0 +1,13 @@
+Welcome to Wajha, {{ full_name|default:username }}!
+
+Your account has been created successfully with the email: {{ email }}
+
+Here's how to get started:
+1. Complete your academic profile so AI can match you with the right grants.
+2. Browse verified scholarships from 38+ countries, all in one place.
+3. Save grants and track every application from start to decision.
+
+Go to your dashboard: {{ site_url }}
+
+— The Wajha Team
+If you didn't create this account, you can safely ignore this email.

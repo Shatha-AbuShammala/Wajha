@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    background: #f8fafc;
+    font-family: 'Inter', Arial, sans-serif;
+  }
+  .container {
+    max-width: 480px;
+    margin: 40px auto;
+    background: #ffffff;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid #eaf0f7;
+  }
+  .banner {
+    background: linear-gradient(150deg, #183153, #162c69);
+    padding: 40px 32px;
+    text-align: center;
+  }
+  .banner img {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    margin-bottom: 16px;
+  }
+  .banner h1 {
+    color: #ffffff;
+    font-size: 22px;
+    margin: 0;
+    font-weight: 700;
+  }
+  .body-content {
+    padding: 32px;
+  }
+  .body-content p {
+    color: #374151;
+    font-size: 15px;
+    line-height: 1.7;
+    margin: 0 0 16px;
+  }
+  .highlight-box {
+    background: #eaf0f7;
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin: 24px 0;
+  }
+  .highlight-box .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6b7280;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .highlight-box .value {
+    font-size: 15px;
+    color: #183153;
+    font-weight: 600;
+  }
+  .cta-button {
+    display: block;
+    text-align: center;
+    background: #f59e0b;
+    color: #ffffff !important;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 15px;
+    padding: 14px;
+    border-radius: 11px;
+    margin: 28px 0 8px;
+  }
+  .steps {
+    margin: 24px 0;
+  }
+  .step {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .step-num {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #eaf0f7;
+    color: #183153;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .step-text {
+    font-size: 14px;
+    color: #374151;
+    line-height: 1.5;
+  }
+  .footer {
+    text-align: center;
+    padding: 24px 32px 32px;
+    border-top: 1px solid #eaf0f7;
+  }
+  .footer p {
+    font-size: 12px;
+    color: #9ca3af;
+    margin: 4px 0;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="banner">
+      <h1>Welcome to Wajha 🎓</h1>
+    </div>
+
+    <div class="body-content">
+      <p>Hi {{ full_name|default:username }},</p>
+      <p>Your account has been created successfully. You're now ready to discover scholarships matched to your background, track deadlines, and let AI help you put your best application forward.</p>
+
+      <div class="highlight-box">
+        <div class="label">Account email</div>
+        <div class="value">{{ email }}</div>
+      </div>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-text">Complete your academic profile so AI can match you with the right grants.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-text">Browse verified scholarships from 38+ countries, all in one place.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-text">Save grants and track every application from start to decision.</div>
+        </div>
+      </div>
+
+      <a href="{{ site_url }}" class="cta-button">Go to your dashboard →</a>
+    </div>
+
+    <div class="footer">
+      <p>Wajha — Find your direction, one application at a time.</p>
+      <p>If you didn't create this account, you can safely ignore this email.</p>
+    </div>
+  </div>
+</body>
+</html>

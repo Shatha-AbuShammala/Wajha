@@ -7,10 +7,10 @@
       <div>
         <div class="eyebrow"><span class="bearing"></span> For Palestinian students &amp; graduates</div>
         <h1>Find your <span class="accent">direction</span>.<br>One application<br>at a time.</h1>
-        <p class="lede">Wajha brings every verified scholarship, deadline, and eligibility rule into one place — then uses AI to point you at the ones actually worth your time.</p>
+        <p class="lede">Wajha brings every verified scholarship, deadline, and eligibility rule into one place  then uses AI to point you at the ones actually worth your time.</p>
         <div class="hero-ctas">
           <a href="{% url 'login' %}" style="text-decoration:none;"><button class="btn btn-primary">Get matched <span class="bearing" style="transform:rotate(90deg) translateY(1px); color:#fff;"></span></button></a>
-          <button class="btn btn-ghost" data-goto="search">Browse all grants</button>
+         <a href="{% url 'grants:search' %}" class="btn btn-ghost" style="text-decoration:none;">Browse all grants</a>
         </div>
     <div>
   <div class="predict-tag">We predict</div>
@@ -67,24 +67,24 @@
       </div>
       <div class="feat-grid">
         <div class="feat">
-          <div class="ico" style="background:var(--orange-dim); color:var(--orange);">◎</div>
+          <div class="ico" style="background:var(--orange-dim); color:var(--orange);"><i class="fa-solid fa-database"></i> </div>
           <h3>Grant database</h3>
           <p>A centralized, regularly updated collection of scholarships with deadlines, eligibility, and sources.</p>
         </div>
         <div class="feat">
-          <div class="ico" style="background:var(--indigo-dim); color:var(--indigo);">✦</div>
+          <div class="ico" style="background:var(--indigo-dim); color:var(--indigo);"><i class="fa-solid fa-robot"></i></div>
           <h3>AI matching</h3>
-          <p>Your profile ranked against every grant by genuine fit — with a plain-language reason for each one.</p>
+          <p>Your profile ranked against every grant by genuine fit  with a plain-language reason for each one.</p>
         </div>
         <div class="feat">
-          <div class="ico" style="background:var(--green-dim); color:var(--green);">✎</div>
+          <div class="ico" style="background:var(--green-dim); color:var(--green);"><i class="fa-regular fa-pen-to-square"></i></div>
           <h3>Application support</h3>
           <p>AI drafts a first version of your motivation letter and reviews your CV for gaps worth fixing.</p>
         </div>
         <div class="feat">
-          <div class="ico" style="background:var(--orange-dim); color:var(--orange);">⏳</div>
+          <div class="ico" style="background:var(--orange-dim); color:var(--orange);"><i class="fa-solid fa-hourglass-end"></i></div>
           <h3>Deadline tracking</h3>
-          <p>Every saved grant moves through clear stages, with alerts before deadlines arrive — not after.</p>
+          <p>Every saved grant moves through clear stages, with alerts before deadlines arrive  not after.</p>
         </div>
       </div>
     </div>
@@ -110,8 +110,8 @@
             {% for t in g.tags %}<span class="tag">{{ t }}</span>{% endfor %}
           </div>
           <div class="gcard-foot">
-            <div class="deadline {% if g.urgent %}urgent{% endif %}"><span class="dot"></span> ⏳ {{ g.days }} days left</div>
-            <button class="save-btn" type="button">Save +</button>
+          <div class="deadline {% if g.urgent %}urgent{% endif %}"><i class="fa-regular fa-clock"></i> {{ g.days }} days left</div>
+            <button class="save-btn" type="button" data-grant-id="{{ g.id }}" >Save +</button>
           </div>
         </div>
         {% endfor %}
@@ -122,11 +122,32 @@
 {% endblock %}
 {% block extra_js %}
 <script>
+  const isAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
+  const loginUrl = "{% url 'login' %}";
+
+  // الضغط على الكارت نفسه = يروح لصفحة تفاصيل الـ grant (لكل المستخدمين، بدون شرط تسجيل دخول)
+  document.querySelectorAll('.gcard').forEach(card => {
+    card.addEventListener('click', () => {
+      const grantId = card.dataset.grantId;
+      if (grantId) {
+        window.location.href = `/grants/${grantId}/`;
+      }
+    });
+  });
+
+  // الضغط على زر Save = لو مش مسجل دخول، يروح لصفحة Login. لو مسجل، يحفظ ويتجمد مكانه
   document.querySelectorAll('.save-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
-      e.stopPropagation();
+      e.stopPropagation(); // عشان ما يفعّل ضغطة الكارت كمان
+
+      if (!isAuthenticated) {
+        window.location.href = loginUrl;
+        return;
+      }
+
       btn.classList.toggle('saved');
       btn.textContent = btn.classList.contains('saved') ? 'Saved ✓' : 'Save +';
+      // TODO: هون لازم Developer B/D يضيفوا AJAX call حقيقي لحفظ الـ grant بقاعدة البيانات
     });
   });
 
