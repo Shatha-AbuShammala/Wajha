@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% load static dict_extras %}
+
+{% block content %}
+<div class="shell" style="padding-top: 32px; padding-bottom: 80px;">
+
+  <div class="dash-head">
+    <h1>My applications</h1>
+    <div class="dash-pills">
+      <span class="dash-pill">{{ total_tracked }} tracked</span>
+      {% if deadlines_this_week > 0 %}
+        <span class="dash-pill alert">⏳ {{ deadlines_this_week }} deadlines this week</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="kanban">
+    {% for key, label, css_class in status_columns %}
+    <div class="kcol">
+      <div class="kcol-head  {{ css_class }}">
+        {{ label }} · {{ columns|dict_get:key|length }}
+      </div>
+
+      {% for app in columns|dict_get:key %}
+      <div class="kcard {% if key == 'accepted' %}win{% elif key == 'rejected' %}dim{% endif %}"
+           draggable="true" data-app-id="{{ app.id }}">
+        <h5>{{ app.grant.title }}</h5>
+        <div class="kmeta">
+          {% if app.note %}
+            {{ app.note }}
+          {% else %}
+            ⏳ {{ app.days_left }} days
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+
+    </div>
+    {% endfor %}
+  </div>
+
+  <p class="helptext" style="margin-top: 20px;">Drag cards between stages · status saves instantly</p>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const cards = document.querySelectorAll('.kcard');
+  const columns = document.querySelectorAll('.kcol');
+
+  cards.forEach(card => {
+    card.addEventListener('dragstart', () => card.classList.add('dragging'));
+    card.addEventListener('dragend', () => card.classList.remove('dragging'));
+  });
+
+  columns.forEach(column => {
+    column.addEventListener('dragover', e => e.preventDefault());
+    column.addEventListener('drop', e => {
+      e.preventDefault();
+      const dragging = document.querySelector('.dragging');
+      if (!dragging) return;
+      column.appendChild(dragging);
+
+      const appId = dragging.dataset.appId;
+      const newStatus = column.dataset.status;
+
+      fetch(`/applications/${appId}/update-status/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `status=${newStatus}`,
+      });
+    });
+  });
+});
+</script>
+{% endblock %}

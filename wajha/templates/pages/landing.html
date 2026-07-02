@@ -5,7 +5,7 @@
   <div class="hero">
     <div class="hero-grid">
       <div>
-        <div class="eyebrow"><span class="bearing"></span> For Palestinian students &amp; graduates</div>
+
         <h1>Find your <span class="accent">direction</span>.<br>One application<br>at a time.</h1>
         <p class="lede">Wajha brings every verified scholarship, deadline, and eligibility rule into one place  then uses AI to point you at the ones actually worth your time.</p>
         <div class="hero-ctas">
@@ -98,7 +98,7 @@
       </div>
       <div class="grants-rail" id="landingGrants">
         {% for g in grants %}
-        <div class="gcard">
+        <div class="gcard" data-grant-id="{{ g.id }}">
           <div class="gcard-top">
             <span class="pill pill-level">{{ g.level }}</span>
           </div>
@@ -122,61 +122,84 @@
 {% endblock %}
 {% block extra_js %}
 <script>
-  const isAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
-  const loginUrl = "{% url 'login' %}";
+const isAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
+const loginUrl = "{% url 'login' %}";
+const csrfToken = "{{ csrf_token }}";
 
-  // الضغط على الكارت نفسه = يروح لصفحة تفاصيل الـ grant (لكل المستخدمين، بدون شرط تسجيل دخول)
-  document.querySelectorAll('.gcard').forEach(card => {
-    card.addEventListener('click', () => {
-      const grantId = card.dataset.grantId;
-      if (grantId) {
-        window.location.href = `/grants/${grantId}/`;
-      }
-    });
+// ضغطة على الكارت = روح لصفحة تفاصيل الـ grant
+document.querySelectorAll('.gcard').forEach(card => {
+  card.addEventListener('click', () => {
+    const grantId = card.dataset.grantId;
+    if (grantId) window.location.href = `/grants/${grantId}/`;
   });
+});
 
-  // الضغط على زر Save = لو مش مسجل دخول، يروح لصفحة Login. لو مسجل، يحفظ ويتجمد مكانه
-  document.querySelectorAll('.save-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation(); // عشان ما يفعّل ضغطة الكارت كمان
+// ضغطة على Save
+document.querySelectorAll('.save-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
 
-      if (!isAuthenticated) {
-        window.location.href = loginUrl;
-        return;
-      }
-
-      btn.classList.toggle('saved');
-      btn.textContent = btn.classList.contains('saved') ? 'Saved ✓' : 'Save +';
-      // TODO: هون لازم Developer B/D يضيفوا AJAX call حقيقي لحفظ الـ grant بقاعدة البيانات
-    });
-  });
-
-  const ticksG = document.getElementById('ticks');
-  if (ticksG) {
-    for (let i = 0; i < 24; i++) {
-      const angle = (i / 24) * 360;
-      const rad = angle * Math.PI / 180;
-      const len = i % 6 === 0 ? 10 : 5;
-      const x1 = 100 + 92 * Math.sin(rad), y1 = 100 - 92 * Math.cos(rad);
-      const x2 = 100 + (92 - len) * Math.sin(rad), y2 = 100 - (92 - len) * Math.cos(rad);
-      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      line.setAttribute('x1', x1); line.setAttribute('y1', y1);
-      line.setAttribute('x2', x2); line.setAttribute('y2', y2);
-      line.setAttribute('stroke', 'var(--fg-faint)');
-      line.setAttribute('stroke-width', i % 6 === 0 ? 1.5 : 1);
-      ticksG.appendChild(line);
+    if (!isAuthenticated) {
+      window.location.href = loginUrl;
+      return;
     }
-  }
 
-  const needle = document.getElementById('needle');
-  if (needle && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    let needleAngle = 0;
-    setInterval(() => {
-      needleAngle = (needleAngle + 37) % 360;
-      needle.style.transformOrigin = '100px 100px';
-      needle.style.transition = 'transform 1.4s cubic-bezier(.4,1.4,.6,1)';
-      needle.style.transform = `rotate(${needleAngle}deg)`;
-    }, 2600);
+    const grantId = btn.dataset.grantId;
+    if (!grantId || btn.disabled) return;
+
+    btn.disabled = true;
+
+    fetch(`/applications/save/${grantId}/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': csrfToken,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.ok) {
+        if (data.saved) {
+          btn.classList.add('saved');
+          btn.textContent = 'Saved ✓';
+        } else {
+          btn.classList.remove('saved');
+          btn.textContent = 'Save +';
+        }
+      }
+    })
+    .catch(err => console.error('Save error:', err))
+    .finally(() => { btn.disabled = false; });
+  });
+});
+
+// Compass animation
+const ticksG = document.getElementById('ticks');
+if (ticksG) {
+  for (let i = 0; i < 24; i++) {
+    const angle = (i / 24) * 360;
+    const rad = angle * Math.PI / 180;
+    const len = i % 6 === 0 ? 10 : 5;
+    const x1 = 100 + 92 * Math.sin(rad), y1 = 100 - 92 * Math.cos(rad);
+    const x2 = 100 + (92 - len) * Math.sin(rad), y2 = 100 - (92 - len) * Math.cos(rad);
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', x1); line.setAttribute('y1', y1);
+    line.setAttribute('x2', x2); line.setAttribute('y2', y2);
+    line.setAttribute('stroke', 'var(--fg-faint)');
+    line.setAttribute('stroke-width', i % 6 === 0 ? 1.5 : 1);
+    ticksG.appendChild(line);
   }
+}
+
+const needle = document.getElementById('needle');
+if (needle && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  let needleAngle = 0;
+  setInterval(() => {
+    needleAngle = (needleAngle + 37) % 360;
+    needle.style.transformOrigin = '100px 100px';
+    needle.style.transition = 'transform 1.4s cubic-bezier(.4,1.4,.6,1)';
+    needle.style.transform = `rotate(${needleAngle}deg)`;
+  }, 2600);
+}
 </script>
 {% endblock %}
