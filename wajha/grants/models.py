@@ -75,7 +75,7 @@ class GrantOpportunity(models.Model):
 
     def is_urgent(self):
         """Returns True if deadline is within 30 days."""
-        return 0 <= self.days_until_deadline() <= 30
+        return 0 <= self.days_until_deadline() <= 15
 
     def is_expired(self):
         """Returns True if deadline has passed."""

@@ -685,6 +685,15 @@ main {
   background: var(--indigo-dim);
   color: var(--indigo);
 }
+.pill-funding {
+  background: var(--green-dim);
+  color: var(--green);
+}
+
+.badge-urgent {
+  background: var(--orange-dim);
+  color: var(--orange);
+}
 .gcard h4 {
   font-size: 16px;
   font-weight: 600;
@@ -1807,6 +1816,24 @@ tbody tr {
   justify-content: center;
   padding: 56px 40px;
 }
+
+.auth-form-wrap {
+  flex-direction: column;
+}
+.auth-form-wrap > .auth-toggle,
+.auth-form-wrap > .auth-form {
+  width: 100%;
+  max-width: 380px;
+}
+.reg-only {
+  display: none;
+}
+.auth-form.mode-register .reg-only {
+  display: block;
+}
+.auth-form.mode-register .signin-only {
+  display: none;
+}
 .auth-form {
   width: 100%;
   max-width: 380px;
@@ -2498,13 +2525,13 @@ body.shape-crisp #tweakPanel {
   align-items: center;
   gap: 5px;
 }
-.badge::before {
+/* .badge::before {
   content: "";
   width: 6px;
   height: 6px;
   border-radius: 50%;
   background: currentColor;
-}
+} */
 .badge-role-admin {
   background: var(--orange-dim);
   color: var(--orange);

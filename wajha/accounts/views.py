@@ -2,7 +2,6 @@ from django.conf import settings
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.views import LoginView
 from django.contrib import messages
 from .forms import SignUpForm, ProfileSetupForm, EmailAuthenticationForm
 from django.core.paginator import Paginator
@@ -104,51 +103,57 @@ def get_profile_gaps(user):
     return gaps
 
 
-# ===================== AUTH VIEWS =====================
-
-def signup_view(request):
+# ===================== AUTH VIEW (unified signin/register) =====================
+def auth_view(request):
     if request.method == 'POST':
-        form = SignUpForm(request.POST)
-        if form.is_valid():
-            user = form.save(commit=False)
-            if user.email in getattr(settings, 'ADMIN_EMAILS', []):
-                user.role = 'admin'
-                user.is_staff = True
-            else:
-                user.role = 'student'
-            user.save()
-            login(request, user, backend='accounts.backends.EmailBackend')
-            send_welcome_email(user, request)  # ← إرسال إيميل الترحيب بعد الحفظ
-            return redirect('profile_setup')
+        submitted = request.POST.get('form_type', 'signin')
+
+        if submitted == 'register':
+            register_form = SignUpForm(request.POST)
+            login_form = EmailAuthenticationForm()
+            if register_form.is_valid():
+                user = register_form.save(commit=False)
+                if user.email in getattr(settings, 'ADMIN_EMAILS', []):
+                    user.role = 'admin'
+                    user.is_staff = True
+                else:
+                    user.role = 'student'
+                user.save()
+                login(request, user, backend='accounts.backends.EmailBackend')
+                send_welcome_email(user, request)
+                return redirect('profile_setup')
+            mode = 'register'
+        else:
+            login_form = EmailAuthenticationForm(request, data=request.POST)
+            register_form = SignUpForm()
+            if login_form.is_valid():
+                user = login_form.get_user()
+                login(request, user)
+
+                if not request.POST.get('remember_me'):
+                    request.session.set_expiry(0)
+
+                if user.email in getattr(settings, 'ADMIN_EMAILS', []) and user.role != 'admin':
+                    user.role = 'admin'
+                    user.is_staff = True
+                    user.save(update_fields=['role', 'is_staff'])
+
+                send_login_email(user, request)
+
+                if user.role == 'admin':
+                    return redirect('/admin/')
+                return redirect('/')
+            mode = 'signin'
     else:
-        form = SignUpForm()
-    return render(request, 'accounts/signup.html', {'form': form})
+        login_form = EmailAuthenticationForm()
+        register_form = SignUpForm()
+        mode = 'signin'
 
-
-class CustomLoginView(LoginView):
-    template_name = 'accounts/login.html'
-    form_class = EmailAuthenticationForm
-
-    def form_valid(self, form):
-        response = super().form_valid(form)
-        user = self.request.user
-
-        # احتياطي: لو الإيميل بقائمة الأدمن بس الدور لسا مش متزامن
-        if user.email in getattr(settings, 'ADMIN_EMAILS', []) and user.role != 'admin':
-            user.role = 'admin'
-            user.is_staff = True
-            user.save(update_fields=['role', 'is_staff'])
-
-        send_login_email(user, self.request)  # ← إرسال إيميل تأكيد تسجيل الدخول
-
-        return response
-
-    def get_success_url(self):
-        user = self.request.user
-        if user.role == 'admin':
-            return '/admin/'
-        return '/'
-
+    return render(request, 'accounts/auth.html', {
+        'login_form': login_form,
+        'register_form': register_form,
+        'mode': mode,
+    })
 
 def logout_view(request):
     logout(request)
@@ -192,7 +197,6 @@ def profile_view(request):
 
 def is_admin_user(user):
     return user.is_authenticated and (user.role == 'admin' or user.is_staff)
-
 
 def _admin_users_redirect(request):
     """Maintains the same search and page after any modification."""
@@ -297,3 +301,5 @@ def delete_user_view(request, user_id):
     target.delete()
     messages.success(request, f"User '{username}' and all associated data have been deleted.")
     return redirect('admin_users')
+
+

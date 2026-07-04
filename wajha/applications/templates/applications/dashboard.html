@@ -9,16 +9,16 @@
     <div class="dash-pills">
       <span class="dash-pill">{{ total_tracked }} tracked</span>
       {% if deadlines_this_week > 0 %}
-        <span class="dash-pill alert">⏳ {{ deadlines_this_week }} deadlines this week</span>
+        <span class="dash-pill alert"> <i class="fa-regular fa-clock"></i> {{ deadlines_this_week }} deadlines this week</span>
       {% endif %}
     </div>
   </div>
 
   <div class="kanban">
     {% for key, label, css_class in status_columns %}
-    <div class="kcol">
+    <div class="kcol"  data-status="{{ key }}">
       <div class="kcol-head  {{ css_class }}">
-        {{ label }} · {{ columns|dict_get:key|length }}
+       <span class="kcol-label">{{ label }}</span> · <span class="kcol-count">{{ columns|dict_get:key|length }}</span>
       </div>
 
       {% for app in columns|dict_get:key %}
@@ -29,7 +29,7 @@
           {% if app.note %}
             {{ app.note }}
           {% else %}
-            ⏳ {{ app.days_left }} days
+              {{ app.days_left }} days
           {% endif %}
         </div>
       </div>
@@ -47,6 +47,14 @@ document.addEventListener('DOMContentLoaded', function () {
   const cards = document.querySelectorAll('.kcard');
   const columns = document.querySelectorAll('.kcol');
 
+  function updateCounts() {
+    columns.forEach(col => {
+      const count = col.querySelectorAll('.kcard').length;
+      const countEl = col.querySelector('.kcol-count');
+      if (countEl) countEl.textContent = count;
+    });
+  }
+
   cards.forEach(card => {
     card.addEventListener('dragstart', () => card.classList.add('dragging'));
     card.addEventListener('dragend', () => card.classList.remove('dragging'));
@@ -58,19 +66,27 @@ document.addEventListener('DOMContentLoaded', function () {
       e.preventDefault();
       const dragging = document.querySelector('.dragging');
       if (!dragging) return;
-      column.appendChild(dragging);
 
-      const appId = dragging.dataset.appId;
+      const oldAppId = dragging.dataset.appId;
       const newStatus = column.dataset.status;
 
-      fetch(`/applications/${appId}/update-status/`, {
+      column.appendChild(dragging);
+      updateCounts();  // تحديث الأرقام فوراً بصرياً
+
+      // تحديث كلاسات win/dim حسب العمود الجديد
+      dragging.classList.remove('win', 'dim');
+      if (newStatus === 'accepted') dragging.classList.add('win');
+      if (newStatus === 'rejected') dragging.classList.add('dim');
+
+      fetch(`/applications/${oldAppId}/update-status/`, {
         method: 'POST',
         headers: {
           'X-CSRFToken': '{{ csrf_token }}',
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: `status=${newStatus}`,
-      });
+      })
+      .catch(err => console.error('Update status error:', err));
     });
   });
 });

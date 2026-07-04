@@ -7,29 +7,42 @@
       <div>
 
         <h1>Find your <span class="accent">direction</span>.<br>One application<br>at a time.</h1>
-        <p class="lede">Wajha brings every verified scholarship, deadline, and eligibility rule into one place  then uses AI to point you at the ones actually worth your time.</p>
+        <p class="lede">Wajha brings every verified scholarship, deadline, and eligibility rule into one place then uses
+          AI to point you at the ones actually worth your time.</p>
         <div class="hero-ctas">
-          <a href="{% url 'login' %}" style="text-decoration:none;"><button class="btn btn-primary">Get matched <span class="bearing" style="transform:rotate(90deg) translateY(1px); color:#fff;"></span></button></a>
-         <a href="{% url 'grants:search' %}" class="btn btn-ghost" style="text-decoration:none;">Browse all grants</a>
+          <a href="{% url 'login' %}" style="text-decoration:none;"><button class="btn btn-primary">Get matched <span
+                class="bearing" style="transform:rotate(90deg) translateY(1px); color:#fff;"></span></button></a>
+          <a href="{% url 'grants:search' %}" class="btn btn-ghost" style="text-decoration:none;">Browse all grants</a>
         </div>
-    <div>
-  <div class="predict-tag">We predict</div>
-  <div class="hero-stats">
-    <div class="stat"><div class="num">1,240+</div><div class="label">verified grants</div></div>
-    <div class="stat"><div class="num">38</div><div class="label">countries</div></div>
-    <div class="stat"><div class="num">96%</div><div class="label">best-match accuracy*</div></div>
-  </div>
-</div>
+        <div>
+          <div class="predict-tag">We predict</div>
+          <div class="hero-stats">
+            <div class="stat">
+              <div class="num">1,240+</div>
+              <div class="label">verified grants</div>
+            </div>
+            <div class="stat">
+              <div class="num">38</div>
+              <div class="label">countries</div>
+            </div>
+            <div class="stat">
+              <div class="num">96%</div>
+              <div class="label">best-match accuracy*</div>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="compass-wrap">
         <div class="compass">
           <svg viewBox="0 0 200 200">
-            <circle cx="100" cy="100" r="92" fill="none" stroke="var(--line)" stroke-width="1.5"/>
-            <circle cx="100" cy="100" r="70" fill="none" stroke="var(--line)" stroke-width="1"/>
+            <circle cx="100" cy="100" r="92" fill="none" stroke="var(--line)" stroke-width="1.5" />
+            <circle cx="100" cy="100" r="70" fill="none" stroke="var(--line)" stroke-width="1" />
             <g id="ticks"></g>
-            <line x1="100" y1="100" x2="100" y2="30" stroke="var(--orange)" stroke-width="3" stroke-linecap="round" id="needle"/>
-            <line x1="100" y1="100" x2="100" y2="150" stroke="var(--fg-faint)" stroke-width="2" stroke-linecap="round"/>
-            <circle cx="100" cy="100" r="6" fill="var(--orange)"/>
+            <line x1="100" y1="100" x2="100" y2="30" stroke="var(--orange)" stroke-width="3" stroke-linecap="round"
+              id="needle" />
+            <line x1="100" y1="100" x2="100" y2="150" stroke="var(--fg-faint)" stroke-width="2"
+              stroke-linecap="round" />
+            <circle cx="100" cy="100" r="6" fill="var(--orange)" />
           </svg>
         </div>
         <div class="compass-card cc-1">
@@ -67,24 +80,28 @@
       </div>
       <div class="feat-grid">
         <div class="feat">
-          <div class="ico" style="background:var(--orange-dim); color:var(--orange);"><i class="fa-solid fa-database"></i> </div>
+          <div class="ico" style="background:var(--orange-dim); color:var(--orange);"><i
+              class="fa-solid fa-database"></i> </div>
           <h3>Grant database</h3>
           <p>A centralized, regularly updated collection of scholarships with deadlines, eligibility, and sources.</p>
         </div>
         <div class="feat">
-          <div class="ico" style="background:var(--indigo-dim); color:var(--indigo);"><i class="fa-solid fa-robot"></i></div>
+          <div class="ico" style="background:var(--indigo-dim); color:var(--indigo);"><i class="fa-solid fa-robot"></i>
+          </div>
           <h3>AI matching</h3>
-          <p>Your profile ranked against every grant by genuine fit  with a plain-language reason for each one.</p>
+          <p>Your profile ranked against every grant by genuine fit with a plain-language reason for each one.</p>
         </div>
         <div class="feat">
-          <div class="ico" style="background:var(--green-dim); color:var(--green);"><i class="fa-regular fa-pen-to-square"></i></div>
+          <div class="ico" style="background:var(--green-dim); color:var(--green);"><i
+              class="fa-regular fa-pen-to-square"></i></div>
           <h3>Application support</h3>
           <p>AI drafts a first version of your motivation letter and reviews your CV for gaps worth fixing.</p>
         </div>
         <div class="feat">
-          <div class="ico" style="background:var(--orange-dim); color:var(--orange);"><i class="fa-solid fa-hourglass-end"></i></div>
+          <div class="ico" style="background:var(--orange-dim); color:var(--orange);"><i
+              class="fa-solid fa-hourglass-end"></i></div>
           <h3>Deadline tracking</h3>
-          <p>Every saved grant moves through clear stages, with alerts before deadlines arrive  not after.</p>
+          <p>Every saved grant moves through clear stages, with alerts before deadlines arrive not after.</p>
         </div>
       </div>
     </div>
@@ -97,109 +114,118 @@
         <p>Quick filter: <span style="color:var(--fg);">Field</span> · Degree · Country · Deadline</p>
       </div>
       <div class="grants-rail" id="landingGrants">
-        {% for g in grants %}
-        <div class="gcard" data-grant-id="{{ g.id }}">
-          <div class="gcard-top">
-            <span class="pill pill-level">{{ g.level }}</span>
-          </div>
-          <div>
-            <h4>{{ g.title }}</h4>
-            <div class="org">{{ g.org }}</div>
-          </div>
-          <div class="gcard-tags">
-            {% for t in g.tags %}<span class="tag">{{ t }}</span>{% endfor %}
-          </div>
-          <div class="gcard-foot">
-          <div class="deadline {% if g.urgent %}urgent{% endif %}"><i class="fa-regular fa-clock"></i> {{ g.days }} days left</div>
-            <button class="save-btn" type="button" data-grant-id="{{ g.id }}" >Save +</button>
-          </div>
-        </div>
-        {% endfor %}
+      {% for g in grants %}
+<div class="gcard" data-grant-id="{{ g.id }}">
+  <div class="gcard-top">
+    {% for d in g.degree_levels.all %}
+      <span class="pill pill-level">{{ d.get_degree_display }}</span>
+    {% endfor %}
+  </div>
+  <div>
+    <h4>{{ g.title }}</h4>
+    <div class="org">{{ g.organization }}</div>
+  </div>
+  <div class="gcard-tags">
+    {% for c in g.countries.all %}
+      <span class="tag">{{ c.country_name }}</span>
+    {% endfor %}
+    <span class="tag">{{ g.get_funding_type_display }}</span>
+  </div>
+  <div class="gcard-foot">
+    <div class="deadline {% if g.is_urgent %}urgent{% endif %}">
+      <i class="fa-regular fa-clock"></i> {{ g.days_until_deadline }} days left
+    </div>
+    <button class="save-btn" type="button" data-grant-id="{{ g.id }}">Save +</button>
+  </div>
+</div>
+{% endfor %}
       </div>
     </div>
   </div>
 </section>
 {% endblock %}
 {% block extra_js %}
+<!-- prettier-ignore -->
 <script>
-const isAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
-const loginUrl = "{% url 'login' %}";
-const csrfToken = "{{ csrf_token }}";
+  const isAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
+  const loginUrl = "{% url 'login' %}";
+  const csrfToken = "{{ csrf_token }}";
 
-// ضغطة على الكارت = روح لصفحة تفاصيل الـ grant
-document.querySelectorAll('.gcard').forEach(card => {
-  card.addEventListener('click', () => {
-    const grantId = card.dataset.grantId;
-    if (grantId) window.location.href = `/grants/${grantId}/`;
+  // ضغطة على الكارت = روح لصفحة تفاصيل الـ grant
+  
+  document.querySelectorAll('.gcard').forEach(card => {
+    card.addEventListener('click', () => {
+      const grantId = card.dataset.grantId;
+      if (grantId) window.location.href = `/grants/${grantId}/`;
+    });
   });
-});
 
-// ضغطة على Save
-document.querySelectorAll('.save-btn').forEach(btn => {
-  btn.addEventListener('click', (e) => {
-    e.stopPropagation();
+  // ضغطة على Save
+  document.querySelectorAll('.save-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
 
-    if (!isAuthenticated) {
-      window.location.href = loginUrl;
-      return;
-    }
-
-    const grantId = btn.dataset.grantId;
-    if (!grantId || btn.disabled) return;
-
-    btn.disabled = true;
-
-    fetch(`/applications/save/${grantId}/`, {
-      method: 'POST',
-      headers: {
-        'X-CSRFToken': csrfToken,
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.ok) {
-        if (data.saved) {
-          btn.classList.add('saved');
-          btn.textContent = 'Saved ✓';
-        } else {
-          btn.classList.remove('saved');
-          btn.textContent = 'Save +';
-        }
+      if (!isAuthenticated) {
+        window.location.href = loginUrl;
+        return;
       }
-    })
-    .catch(err => console.error('Save error:', err))
-    .finally(() => { btn.disabled = false; });
+
+      const grantId = btn.dataset.grantId;
+      if (!grantId || btn.disabled) return;
+
+      btn.disabled = true;
+
+      fetch(`/applications/save/${grantId}/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrfToken,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.ok) {
+            if (data.saved) {
+              btn.classList.add('saved');
+              btn.textContent = 'Saved ✓';
+            } else {
+              btn.classList.remove('saved');
+              btn.textContent = 'Save +';
+            }
+          }
+        })
+        .catch(err => console.error('Save error:', err))
+        .finally(() => { btn.disabled = false; });
+    });
   });
-});
 
-// Compass animation
-const ticksG = document.getElementById('ticks');
-if (ticksG) {
-  for (let i = 0; i < 24; i++) {
-    const angle = (i / 24) * 360;
-    const rad = angle * Math.PI / 180;
-    const len = i % 6 === 0 ? 10 : 5;
-    const x1 = 100 + 92 * Math.sin(rad), y1 = 100 - 92 * Math.cos(rad);
-    const x2 = 100 + (92 - len) * Math.sin(rad), y2 = 100 - (92 - len) * Math.cos(rad);
-    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    line.setAttribute('x1', x1); line.setAttribute('y1', y1);
-    line.setAttribute('x2', x2); line.setAttribute('y2', y2);
-    line.setAttribute('stroke', 'var(--fg-faint)');
-    line.setAttribute('stroke-width', i % 6 === 0 ? 1.5 : 1);
-    ticksG.appendChild(line);
+  // Compass animation
+  const ticksG = document.getElementById('ticks');
+  if (ticksG) {
+    for (let i = 0; i < 24; i++) {
+      const angle = (i / 24) * 360;
+      const rad = angle * Math.PI / 180;
+      const len = i % 6 === 0 ? 10 : 5;
+      const x1 = 100 + 92 * Math.sin(rad), y1 = 100 - 92 * Math.cos(rad);
+      const x2 = 100 + (92 - len) * Math.sin(rad), y2 = 100 - (92 - len) * Math.cos(rad);
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', x1); line.setAttribute('y1', y1);
+      line.setAttribute('x2', x2); line.setAttribute('y2', y2);
+      line.setAttribute('stroke', 'var(--fg-faint)');
+      line.setAttribute('stroke-width', i % 6 === 0 ? 1.5 : 1);
+      ticksG.appendChild(line);
+    }
   }
-}
 
-const needle = document.getElementById('needle');
-if (needle && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-  let needleAngle = 0;
-  setInterval(() => {
-    needleAngle = (needleAngle + 37) % 360;
-    needle.style.transformOrigin = '100px 100px';
-    needle.style.transition = 'transform 1.4s cubic-bezier(.4,1.4,.6,1)';
-    needle.style.transform = `rotate(${needleAngle}deg)`;
-  }, 2600);
-}
+  const needle = document.getElementById('needle');
+  if (needle && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    let needleAngle = 0;
+    setInterval(() => {
+      needleAngle = (needleAngle + 37) % 360;
+      needle.style.transformOrigin = '100px 100px';
+      needle.style.transition = 'transform 1.4s cubic-bezier(.4,1.4,.6,1)';
+      needle.style.transform = `rotate(${needleAngle}deg)`;
+    }, 2600);
+  }
 </script>
 {% endblock %}

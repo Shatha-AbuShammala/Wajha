@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Sign in or Register — Wajha{% endblock %}
+{% block content %}
+<section class="page active" id="page-auth">
+  <div class="auth-shell">
+    <div class="auth-brand">
+      <div>
+        <h2>Where talented students find their <span class="accent">direction</span>.</h2>
+        <p>Join thousands of Palestinian students who track every deadline, get AI-matched to the right grants, and never miss a chance worth taking.</p>
+      </div>
+      <div class="ab-stats">
+        <div><div class="num">1,240+</div><div class="label">verified grants</div></div>
+        <div><div class="num">38</div><div class="label">countries</div></div>
+        <div><div class="num">96%</div><div class="label">match accuracy</div></div>
+      </div>
+      <div class="ab-glow"></div>
+    </div>
+
+    <div class="auth-form-wrap" data-mode="{{ mode }}">
+      <div class="auth-toggle">
+        <button type="button" class="toggle-btn {% if mode == 'signin' %}active{% endif %}" data-target="signin">Sign in</button>
+        <button type="button" class="toggle-btn {% if mode == 'register' %}active{% endif %}" data-target="register">Register</button>
+      </div>
+
+      <form class="auth-form" id="signinForm" data-panel="signin" method="post" action="{% url 'login' %}" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="form_type" value="signin">
+        <h3>Welcome back</h3>
+        <p class="sub">Sign in to pick up where you left off.</p>
+
+        {% if login_form.non_field_errors %}
+          <div class="field" style="color:#E5484D; font-size:13px;">{{ login_form.non_field_errors }}</div>
+        {% endif %}
+        <div class="field">
+          <label for="{{ login_form.username.id_for_label }}">Email</label>
+          {{ login_form.username }}
+          {% if login_form.username.errors %}<div style="color:#E5484D; font-size:12.5px; margin-top:6px;">{{ login_form.username.errors.0 }}</div>{% endif %}
+        </div>
+        <div class="field">
+          <label for="{{ login_form.password.id_for_label }}">Password</label>
+          {{ login_form.password }}
+          {% if login_form.password.errors %}<div style="color:#E5484D; font-size:12.5px; margin-top:6px;">{{ login_form.password.errors.0 }}</div>{% endif %}
+        </div>
+        <div class="row-meta">
+          <label class="check-row" style="margin:0; font-size:12.5px;"><input type="checkbox" name="remember_me" checked> Remember me</label>
+          <a href="{% url 'password_reset' %}">Forgot password?</a>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Sign in →</button>
+        {% include 'accounts/_oauth_row.html' %}
+      </form>
+
+      <form class="auth-form" id="registerForm" data-panel="register" method="post" action="{% url 'signup' %}" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="form_type" value="register">
+        <h3>Create your account</h3>
+        <p class="sub">Two minutes to set up — then let AI do the matching.</p>
+
+        {% if register_form.non_field_errors %}
+          <div class="field" style="color:#E5484D; font-size:13px;">{{ register_form.non_field_errors }}</div>
+        {% endif %}
+        <div class="field">
+          <label for="{{ register_form.full_name.id_for_label }}">Full Name</label>
+          {{ register_form.full_name }}
+          {% if register_form.full_name.errors %}<div style="color:#E5484D; font-size:12.5px; margin-top:6px;">{{ register_form.full_name.errors.0 }}</div>{% endif %}
+        </div>
+        <div class="field">
+          <label for="{{ register_form.email.id_for_label }}">Email</label>
+          {{ register_form.email }}
+          {% if register_form.email.errors %}<div style="color:#E5484D; font-size:12.5px; margin-top:6px;">{{ register_form.email.errors.0 }}</div>{% endif %}
+        </div>
+        <div class="field">
+          <label for="{{ register_form.password1.id_for_label }}">Password</label>
+          {{ register_form.password1 }}
+          {% if register_form.password1.errors %}<div style="color:#E5484D; font-size:12.5px; margin-top:6px;">{{ register_form.password1.errors.0 }}</div>{% endif %}
+        </div>
+        <div class="field">
+          <label for="{{ register_form.password2.id_for_label }}">Confirm password</label>
+          {{ register_form.password2 }}
+          {% if register_form.password2.errors %}<div style="color:#E5484D; font-size:12.5px; margin-top:6px;">{{ register_form.password2.errors.0 }}</div>{% endif %}
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Create account</button>
+        {% include 'accounts/_oauth_row.html' %}
+      </form>
+    </div>
+  </div>
+</section>
+
+<script>
+(function () {
+  const wrap = document.querySelector('.auth-form-wrap');
+  const toggleBtns = document.querySelectorAll('.toggle-btn');
+  const panels = {
+    signin: document.getElementById('signinForm'),
+    register: document.getElementById('registerForm'),
+  };
+
+  function setMode(mode) {
+    wrap.dataset.mode = mode;
+    toggleBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.target === mode));
+    panels.signin.style.display = mode === 'signin' ? 'block' : 'none';
+    panels.register.style.display = mode === 'register' ? 'block' : 'none';
+  }
+
+  toggleBtns.forEach(btn => {
+    btn.addEventListener('click', () => setMode(btn.dataset.target));
+  });
+
+  // initial state from server-rendered mode (e.g. after a failed submit)
+  setMode(wrap.dataset.mode || 'signin');
+})();
+</script>
+{% endblock %}
