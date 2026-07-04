@@ -28,7 +28,7 @@ DATE_RE = re.compile(
 )
 
 # ── Degree-type detection ─────────────────────────────────────────────────────
-# Searched against the lowercased title + excerpt text.
+# Searched against the lowercased title + full content text.
 # Order matters: more-specific terms first.
 DEGREE_TEXT_RULES = [
     # PhD / Postdoctoral
@@ -57,20 +57,43 @@ DEGREE_TEXT_RULES = [
     ('certificate',      'Diploma'),
 ]
 
-# ── Region / Country mapping ──────────────────────────────────────────────────
-# OpportunityDesk uses the SmartMag WordPress theme. The category link inside
-# <span class="meta-item post-cat"> often contains a region name
-# (e.g. "Africa", "America", "Europe") rather than a specific country.
-# We capture that as the country value.
+# ── Host Country detection ────────────────────────────────────────────────────
+# Searched against lowercased title and full content text.
+COUNTRY_KEYWORDS = [
+    (r'\bireland\b|\birish\b', 'Ireland'),
+    (r'\busa\b|\bu\.s\b|\bamerica\b|\bunited states\b|\bamerican\b', 'United States'),
+    (r'\buk\b|\bu\.k\b|\bbritish\b|\bengland\b|\bscotland\b|\bunited kingdom\b', 'United Kingdom'),
+    (r'\bgermany\b|\bgerman\b|\bdaad\b|\bdeutsch\b', 'Germany'),
+    (r'\bzurich\b|\bswitzerland\b|\bswiss\b', 'Switzerland'),
+    (r'\bcanada\b|\bcanadian\b', 'Canada'),
+    (r'\baustralia\b|\baustralian\b', 'Australia'),
+    (r'\bnetherlands\b|\bdutch\b|\bholland\b', 'Netherlands'),
+    (r'\bsweden\b|\bswedish\b', 'Sweden'),
+    (r'\bnorway\b|\bnorwegian\b', 'Norway'),
+    (r'\bfrance\b|\bfrench\b', 'France'),
+    (r'\bchina\b|\bchinese\b', 'China'),
+    (r'\bjapan\b|\bjapanese\b', 'Japan'),
+    (r'\bsingapore\b', 'Singapore'),
+    (r'\bmalaysia\b|\bmalaysian\b', 'Malaysia'),
+    (r'\bitaly\b|\bitalian\b', 'Italy'),
+    (r'\bspain\b|\bspanish\b', 'Spain'),
+    (r'\bbelgium\b|\bbelgian\b', 'Belgium'),
+    (r'\baustria\b|\baustrian\b', 'Austria'),
+    (r'\bdenmark\b|\bdanish\b', 'Denmark'),
+    (r'\bfinland\b|\bfinnish\b', 'Finland'),
+    (r'\bnew zealand\b', 'New Zealand'),
+    (r'\bturkey\b|\bturkish\b', 'Turkey'),
+    (r'\bpoland\b|\bpolish\b', 'Poland'),
+    (r'\bhungary\b|\bhungarian\b', 'Hungary'),
+    (r'\bportugal\b|\bportuguese\b', 'Portugal'),
+    (r'\bgreece\b|\bgreek\b', 'Greece'),
+]
 
 
 def _extract_degree_types(text: str) -> list:
     """
     Returns a deduplicated list of degree labels inferred from free text
-    (title + excerpt combined).
-
-    Example: "PhD Position in Human Geography" → ['PhD']
-             "Undergraduate and Postgraduate Studies" → ['Bachelor', 'Master']
+    (title + full content combined).
     """
     lower = text.lower()
     found, seen = [], set()
@@ -81,12 +104,10 @@ def _extract_degree_types(text: str) -> list:
     return found
 
 
-def _extract_country(article) -> str:
+def _extract_fallback_region(article) -> str:
     """
-    Returns the region/country string from the SmartMag post-cat meta span.
+    Returns the region/category string from the SmartMag post-cat meta span.
     Falls back to the legacy .cat-links selector and then to ''.
-
-    Examples: 'Africa', 'America', 'Europe', 'Asia'
     """
     # SmartMag theme (current)
     post_cat = article.select_one('span.meta-item.post-cat a')
@@ -102,6 +123,29 @@ def _extract_country(article) -> str:
         return cat_tag.get_text(strip=True)
 
     return ''
+
+
+def _extract_host_country(title: str, text: str, fallback_region: str) -> str:
+    """
+    Infers the actual host country where the scholarship is located/published.
+    Prioritizes keywords in the Title first, then the full content text,
+    and falls back to the post's WordPress category region (like Africa, America).
+    """
+    title_lower = title.lower()
+    text_lower = text.lower()
+
+    # 1. Search Title first (very high accuracy)
+    for pattern, country in COUNTRY_KEYWORDS:
+        if re.search(pattern, title_lower):
+            return country
+
+    # 2. Search full content
+    for pattern, country in COUNTRY_KEYWORDS:
+        if re.search(pattern, text_lower):
+            return country
+
+    # 3. Fallback to WordPress region category (e.g. Africa, Europe)
+    return fallback_region
 
 
 class OpportunityDeskScraper(BaseScraper):
@@ -145,17 +189,47 @@ class OpportunityDeskScraper(BaseScraper):
                 title = title_tag.get_text(strip=True)
                 url   = title_tag.get('href', '')
 
-                # ── Excerpt / description ─────────────────────────────────────
-                excerpt_tag = (
-                    article.select_one('.entry-summary p') or
-                    article.select_one('.entry-content p') or
-                    article.select_one('p')
-                )
-                excerpt = excerpt_tag.get_text(strip=True) if excerpt_tag else ''
+                # ── Published date ────────────────────────────────────────────
+                date_tag = article.select_one('time')
+                published = date_tag.get('datetime', '') if date_tag else ''
 
-                # ── Deadline (extracted from excerpt text) ────────────────────
+                # ── Category ──────────────────────────────────────────────────
+                cat_tag = article.select_one('.cat-links a') or article.select_one('.entry-meta a')
+                category = cat_tag.get_text(strip=True) if cat_tag else 'Scholarship'
+
+                # ── Fallback Region ───────────────────────────────────────────
+                fallback_region = _extract_fallback_region(article)
+
+                # ── Fetch Full Article Detail Page ────────────────────────────
+                full_text = ""
+                description = ""
+                try:
+                    detail_res = requests.get(url, headers=HEADERS, timeout=10)
+                    detail_res.raise_for_status()
+                    detail_soup = BeautifulSoup(detail_res.text, 'html.parser')
+                    content_block = detail_soup.select_one('.entry-content')
+                    if content_block:
+                        # Extract clean text from all paragraphs in the article
+                        paragraphs = [p.get_text(strip=True) for p in content_block.select('p') if p.get_text(strip=True)]
+                        full_text = "\n\n".join(paragraphs)
+                        # We use the full text as the description so the user sees the complete details!
+                        description = full_text
+                except Exception as e:
+                    logger.warning(f"[{self.source_name}] Could not fetch single page for {title}: {e}")
+
+                # Fallback to excerpt if fetching individual page fails
+                if not description:
+                    excerpt_tag = (
+                        article.select_one('.entry-summary p') or
+                        article.select_one('.entry-content p') or
+                        article.select_one('p')
+                    )
+                    description = excerpt_tag.get_text(strip=True) if excerpt_tag else ''
+                    full_text = description
+
+                # ── Deadline (extracted from full text or description) ────────
                 deadline = ''
-                match = DEADLINE_RE.search(excerpt)
+                match = DEADLINE_RE.search(description)
                 if match:
                     raw_deadline_text = match.group(1).strip()
                     date_match = DATE_RE.search(raw_deadline_text)
@@ -166,30 +240,22 @@ class OpportunityDeskScraper(BaseScraper):
                         except Exception:
                             pass
 
-                # ── Published date ────────────────────────────────────────────
-                date_tag = article.select_one('time')
-                published = date_tag.get('datetime', '') if date_tag else ''
-
                 # ── Country / Region ──────────────────────────────────────────
-                country = _extract_country(article)
+                country = _extract_host_country(title, full_text, fallback_region)
 
-                # ── Category (existing field) ─────────────────────────────────
-                cat_tag = article.select_one('.cat-links a') or article.select_one('.entry-meta a')
-                category = cat_tag.get_text(strip=True) if cat_tag else 'Scholarship'
-
-                # ── Degree types — inferred from title + excerpt ───────────────
-                combined_text = f"{title} {excerpt}"
+                # ── Degree types ──────────────────────────────────────────────
+                combined_text = f"{title} {full_text}"
                 degree_types = _extract_degree_types(combined_text)
 
                 grants.append({
                     'title':        title,
                     'url':          url,
-                    'description':  excerpt,
+                    'description':  description,
                     'deadline':     deadline,
                     'organization': self.source_name,
                     'category':     category,
                     'country':      country,
-                    'degree_types': degree_types,   # list e.g. ['Bachelor', 'Master']
+                    'degree_types': degree_types,
                     'published_at': published,
                     'raw_html':     str(article),
                 })

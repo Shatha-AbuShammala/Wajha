@@ -108,38 +108,40 @@
   }
   .btn-back:hover { color: var(--fg, #1e293b); }
 
-  /* Approve — border only, green */
-  .btn-approve {
+  /* Approve / Draft — border only, dark/grey */
+  .btn-approve, .btn-draft {
     padding: 0.45rem 1.4rem;
     border-radius: 9px;
     font-size: 0.875rem;
     font-weight: 600;
     background: transparent;
-    color: #10b981;
-    border: 1.5px solid #10b981;
+    color: var(--fg, #1e293b);
+    border: 1.5px solid var(--fg, #1e293b);
     cursor: pointer;
-    transition: background .2s, color .2s, transform .15s;
+    transition: background .2s, color .2s, border-color .2s, transform .15s;
   }
-  .btn-approve:hover {
-    background: #10b981;
+  .btn-approve:hover, .btn-draft:hover {
+    background: var(--orange, #f59e0b);
+    border-color: var(--orange, #f59e0b);
     color: #fff;
     transform: translateY(-1px);
   }
 
-  /* Reject — border only, red */
+  /* Reject — border only, dark/grey */
   .btn-reject {
     padding: 0.45rem 1.4rem;
     border-radius: 9px;
     font-size: 0.875rem;
     font-weight: 600;
     background: transparent;
-    color: #ef4444;
-    border: 1.5px solid #ef4444;
+    color: var(--fg, #1e293b);
+    border: 1.5px solid var(--fg, #1e293b);
     cursor: pointer;
-    transition: background .2s, color .2s, transform .15s;
+    transition: background .2s, color .2s, border-color .2s, transform .15s;
   }
   .btn-reject:hover {
-    background: #ef4444;
+    background: var(--orange, #f59e0b);
+    border-color: var(--orange, #f59e0b);
     color: #fff;
     transform: translateY(-1px);
   }
@@ -219,10 +221,7 @@
   <main class="admin-main">
 
     <div class="admin-top" style="margin-bottom:1rem;">
-      <h2>
-        Scraped Grant Detail
-        <span class="count">#{{ scraped.pk }}</span>
-      </h2>
+      <h2>Scraped Grant Detail</h2>
     </div>
 
     {# ── Action bar ── #}
@@ -237,6 +236,10 @@
         {% csrf_token %}
         <button type="submit" class="btn-approve">Approve</button>
       </form>
+      <form method="post" action="{% url 'scrapers:draft' scraped.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="btn-draft">Draft</button>
+      </form>
       {% endif %}
       
       {# Reject when pending or approved #}
@@ -247,15 +250,6 @@
       </form>
       {% endif %}
 
-      {# External link #}
-      {% with url=scraped.parsed_data.url %}
-      {% if url %}
-        <a href="{{ url }}" target="_blank" rel="noopener"
-           style="margin-left:auto; font-size:0.82rem; color:var(--muted); text-decoration:none;">
-          Open source ↗
-        </a>
-      {% endif %}
-      {% endwith %}
     </div>
 
     {# ── Overview ── #}
@@ -304,6 +298,26 @@
           {% if key == 'url' %}
             <a href="{{ value }}" target="_blank" rel="noopener"
                style="color:var(--accent, #6366f1);">{{ value|truncatechars:80 }}</a>
+          {% elif key == 'degree_types' %}
+            {# Render list as comma-separated string, e.g. Master, Bachelor #}
+            {% if value %}
+              {{ value|join:", " }}
+            {% else %}
+              —
+            {% endif %}
+          {% elif key == 'description' %}
+            {# Show the full description in a readable block — no clipping #}
+            <div style="
+              background: var(--surface2, #f8fafc);
+              border: 1px solid var(--border, #e2e8f0);
+              border-radius: 8px;
+              padding: 0.75rem 1rem;
+              white-space: pre-wrap;
+              word-break: break-word;
+              font-size: 0.875rem;
+              line-height: 1.7;
+              color: var(--fg, #1e293b);
+            ">{{ value|default:"—" }}</div>
           {% else %}
             {{ value|default:"—" }}
           {% endif %}

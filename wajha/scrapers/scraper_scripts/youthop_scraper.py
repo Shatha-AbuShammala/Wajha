@@ -153,8 +153,9 @@ class YouthOpScraper(BaseScraper):
                 category = funding_tag.get_text(strip=True) if funding_tag else 'Scholarship'
 
                 # ── Location / Organization ───────────────────────────────────
-                location_tag = article.select_one('span[itemprop="location"] span[itemprop="name"]')
-                organization = location_tag.get_text(strip=True) if location_tag else self.source_name
+                # Organization = the source portal that listed this scholarship.
+                # The country is already captured separately in the 'country' field.
+                organization = self.source_name
 
                 # ── Deadline ──────────────────────────────────────────────────
                 # The site stores the deadline as an ISO datetime in the

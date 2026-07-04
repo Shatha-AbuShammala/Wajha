@@ -143,9 +143,8 @@ def scraped_grant_detail(request, pk):
     return render(request, 'scrapers/admin/scraped_detail.html', context)
 
 
-@login_required
-def scraped_grant_approve(request, pk):
-    """Admin: approve a scraped grant → creates a published GrantOpportunity."""
+def _process_scraped_approval(request, pk, grant_status='published'):
+    """Helper to handle approving a scraped grant either as published or draft."""
     if not is_admin(request.user):
         return redirect('grants:list')
 
@@ -201,7 +200,9 @@ def scraped_grant_approve(request, pk):
     elif 'travel' in search_text:
         funding_type = 'travel_grant'
 
-    GrantOpportunity.objects.create(
+    from grants.models import GrantOpportunity, GrantCountry, GrantDegreeLevel
+
+    grant = GrantOpportunity.objects.create(
         title=title,
         organization=org,
         description=desc,
@@ -210,16 +211,49 @@ def scraped_grant_approve(request, pk):
         funding_type=funding_type,
         deadline=deadline_date,
         source_url=url,
-        status='published',  # Live for users immediately
+        status=grant_status,  # 'published' or 'draft'
         added_by_id=request.user.pk,
     )
+
+    # ── Save country ────────────────────────────────────────────────────────
+    country = scraped.parsed_data.get('country', '').strip()
+    if country:
+        GrantCountry.objects.get_or_create(grant=grant, country_name=country)
+
+    # ── Save degree types ────────────────────────────────────────────────────
+    DEGREE_MAP = {
+        'bachelor': 'bachelor',
+        'master':   'master',
+        'phd':      'phd',
+        'diploma':  'diploma',
+    }
+    degree_types = scraped.parsed_data.get('degree_types', [])
+    for label in degree_types:
+        key = DEGREE_MAP.get(label.lower())
+        if key:
+            GrantDegreeLevel.objects.get_or_create(grant=grant, degree=key)
 
     # Only update status — reviewed_by is intentionally skipped because the
     # raw DB FK constraint references a stale 'user' table causing IntegrityError.
     ScrapedGrant.objects.filter(pk=scraped.pk).update(status='approved')
 
-    messages.success(request, f'"{title[:60]}" approved and is now live for users.')
+    if grant_status == 'published':
+        messages.success(request, f'"{title[:60]}" approved and is now live for users.')
+    else:
+        messages.success(request, f'"{title[:60]}" saved to Grants as draft.')
     return redirect(request.META.get('HTTP_REFERER', 'scrapers:list'))
+
+
+@login_required
+def scraped_grant_approve(request, pk):
+    """Admin: approve a scraped grant → creates a published GrantOpportunity."""
+    return _process_scraped_approval(request, pk, grant_status='published')
+
+
+@login_required
+def scraped_grant_draft(request, pk):
+    """Admin: approve a scraped grant as a draft."""
+    return _process_scraped_approval(request, pk, grant_status='draft')
 
 
 @login_required
