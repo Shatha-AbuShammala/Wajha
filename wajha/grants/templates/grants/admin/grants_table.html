@@ -3,6 +3,25 @@
 
 {% block title %}Manage Grants — Wajha{% endblock %}
 
+{% block extra_head %}
+<style>
+  /* ── Organization chip — same style as Scraped Queue ── */
+  .source-chip {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 2px 9px;
+    border-radius: 8px;
+    background: var(--bg-soft, #f1f5f9);
+    color: var(--fg-dim, #64748b);
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="admin-shell">
 
@@ -32,7 +51,7 @@
             <thead>
                 <tr>
                     <th>Title</th>
-                    <th>Organisation</th>
+                    <th>Organization</th>
                     <th>Level</th>
                     <th>Country</th>
                     <th>Deadline</th>
@@ -48,7 +67,7 @@
                             {{ grant.title|truncatechars:40 }}
                         </a>
                     </td>
-                    <td>{{ grant.organization|truncatechars:20 }}</td>
+                    <td><span class="source-chip" title="{{ grant.organization }}">{{ grant.organization|truncatechars:25 }}</span></td>
                     <td>
                         {% for d in grant.degree_levels.all %}
                             <span class="badge badge-role-user">{{ d.get_degree_display }}</span>

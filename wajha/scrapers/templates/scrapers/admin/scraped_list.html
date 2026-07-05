@@ -134,7 +134,7 @@
       <thead>
         <tr>
           <th>Title</th>
-          <th>Source</th>
+          <th>Organization</th>
           <th>Deadline</th>
           <th>Scraped At</th>
           <th>Actions</th>
@@ -186,6 +186,10 @@
             <form method="post" action="{% url 'scrapers:approve' item.pk %}" style="display:inline;">
               {% csrf_token %}
               <button type="submit">Approve</button>
+            </form>
+            <form method="post" action="{% url 'scrapers:draft' item.pk %}" style="display:inline;">
+              {% csrf_token %}
+              <button type="submit">Draft</button>
             </form>
             {% endif %}
 
