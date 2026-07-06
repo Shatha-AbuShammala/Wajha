@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Sign in with {{ account.get_provider.name }} — Wajha{% endblock %}
+{% block content %}
+<section class="page active" id="page-auth">
+  <div class="auth-shell">
+    <div class="auth-brand">
+      <div>
+        <h2>Where talented students find their <span class="accent">direction</span>.</h2>
+        <p>Join thousands of Palestinian students who track every deadline, get AI-matched to the right grants, and never miss a chance worth taking.</p>
+      </div>
+    </div>
+
+    <div class="auth-form-wrap">
+      <div class="auth-form" style="text-align:center;">
+        <h3>Continue with {{ account.get_provider.name }}</h3>
+        <p class="sub">You're about to sign in using your {{ account.get_provider.name }} account.</p>
+
+        <form method="post" action="">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary btn-block">Continue →</button>
+        </form>
+
+        <div class="auth-divider">or</div>
+        <a href="{% url 'login' %}" class="btn btn-ghost btn-block">Back to sign in</a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
