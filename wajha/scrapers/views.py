@@ -200,13 +200,17 @@ def _process_scraped_approval(request, pk, grant_status='published'):
     elif 'travel' in search_text:
         funding_type = 'travel_grant'
 
-    from grants.models import GrantOpportunity, GrantCountry, GrantDegreeLevel
+    eligibility = scraped.parsed_data.get('eligibility_text', '').strip()
+    if not eligibility:
+        eligibility = 'Please refer to the source website link for detailed eligibility criteria.'
+
+    from grants.models import GrantOpportunity, GrantCountry, GrantDegreeLevel, GrantFieldOfStudy
 
     grant = GrantOpportunity.objects.create(
         title=title,
         organization=org,
         description=desc,
-        eligibility_text='Please refer to the source website link for detailed eligibility criteria.',
+        eligibility_text=eligibility,
         eligibility_summary='No AI summary generated yet.',
         funding_type=funding_type,
         deadline=deadline_date,
@@ -215,12 +219,19 @@ def _process_scraped_approval(request, pk, grant_status='published'):
         added_by_id=request.user.pk,
     )
 
-    # ── Save country ────────────────────────────────────────────────────────
-    country = scraped.parsed_data.get('country', '').strip()
-    if country:
-        GrantCountry.objects.get_or_create(grant=grant, country_name=country)
+    # ── Save countries (multi-country support) ───────────────────────────────
+    # Prefer the 'countries' list; fall back to single 'country' for backward compat.
+    countries = scraped.parsed_data.get('countries', [])
+    if not countries:
+        single_country = scraped.parsed_data.get('country', '').strip()
+        if single_country:
+            countries = [single_country]
+    for country_name in countries:
+        country_name = country_name.strip()
+        if country_name:
+            GrantCountry.objects.get_or_create(grant=grant, country_name=country_name)
 
-    # ── Save degree types ────────────────────────────────────────────────────
+    # ── Save degree types ─────────────────────────────────────────────────────────
     DEGREE_MAP = {
         'bachelor': 'bachelor',
         'master':   'master',
@@ -232,6 +243,13 @@ def _process_scraped_approval(request, pk, grant_status='published'):
         key = DEGREE_MAP.get(label.lower())
         if key:
             GrantDegreeLevel.objects.get_or_create(grant=grant, degree=key)
+
+    # ── Save fields of study ───────────────────────────────────────────
+    fields_of_study = scraped.parsed_data.get('fields_of_study', [])
+    for field_name in fields_of_study:
+        field_name = field_name.strip()
+        if field_name:
+            GrantFieldOfStudy.objects.get_or_create(grant=grant, field_name=field_name)
 
     # Only update status — reviewed_by is intentionally skipped because the
     # raw DB FK constraint references a stale 'user' table causing IntegrityError.

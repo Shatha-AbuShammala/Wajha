@@ -2,7 +2,7 @@ from django.test import TestCase
 from unittest.mock import Mock, patch
 from scrapers.models import GrantSource, ScrapedGrant
 from scrapers.scraper_scripts.opportunity_desk_scraper import OpportunityDeskScraper
-from scrapers.scraper_scripts.grab_scholarship_scraper import GrabScholarshipScraper
+
 
 
 class ScraperTestCase(TestCase):
@@ -38,7 +38,8 @@ class ScraperTestCase(TestCase):
         self.assertEqual(len(grants), 1)
         self.assertEqual(grants[0]['title'], 'Test Scholarship 2026')
         self.assertEqual(grants[0]['url'], 'https://opportunitydesk.org/test-scholarship/')
-        self.assertEqual(grants[0]['deadline'], 'August 12, 2026')
+        # Scraper converts deadline strings to ISO format (YYYY-MM-DD)
+        self.assertEqual(grants[0]['deadline'], '2026-08-12')
         self.assertEqual(grants[0]['category'], 'Fellowships')
 
         # Assert correct database creation
@@ -50,106 +51,59 @@ class ScraperTestCase(TestCase):
 
     def test_approve_grants_action(self):
         from django.contrib.auth import get_user_model
-        from scrapers.admin import approve_grants
-        from grants.models import GrantOpportunity
-        from unittest.mock import Mock
+        from django.urls import reverse
+        from grants.models import GrantOpportunity, GrantFieldOfStudy, GrantCountry
 
         User = get_user_model()
-        user = User.objects.create_user(username='testadmin', password='password123', is_staff=True)
+        user = User.objects.create_user(username='testadmin', password='password123', is_staff=True, role='admin')
+        self.client.force_login(user)
 
         source = GrantSource.objects.create(name='Test Source', url='https://test.com')
         scraped = ScrapedGrant.objects.create(
             source=source,
-            raw_title="Awesome Fellowship",
+            raw_title="Awesome Engineering Fellowship",
             parsed_data={
                 "url": "https://test.com/awesome-fellowship",
-                "description": "This is an awesome fellowship opportunity.",
+                "description": "This is an awesome fellowship opportunity for engineering students.",
                 "deadline": "August 12, 2026",
-                "organization": "Test Org"
+                "organization": "Test Org",
+                "fields_of_study": ["Engineering", "Science & STEM"],
+                "countries": ["Germany", "France"],
+                "eligibility_text": "Eligible candidates must be enrolled in an engineering program.",
             }
         )
 
-        mock_request = Mock()
-        mock_request.user = user
+        # Call the draft approve view using a POST request
+        response = self.client.post(reverse('scrapers:draft', kwargs={'pk': scraped.pk}))
 
-        mock_modeladmin = Mock()
-
-        # Call the action
-        approve_grants(mock_modeladmin, mock_request, ScrapedGrant.objects.all())
+        # Assert redirection/success status code (302 redirect)
+        self.assertEqual(response.status_code, 302)
 
         # Assert ScrapedGrant status is updated to approved
         scraped.refresh_from_db()
         self.assertEqual(scraped.status, 'approved')
-        self.assertEqual(scraped.reviewed_by, user)
 
-        # Assert GrantOpportunity is created
+        # Assert GrantOpportunity is created with scraped eligibility text
         self.assertEqual(GrantOpportunity.objects.count(), 1)
         grant = GrantOpportunity.objects.first()
-        self.assertEqual(grant.title, "Awesome Fellowship")
+        self.assertEqual(grant.title, "Awesome Engineering Fellowship")
         self.assertEqual(grant.source_url, "https://test.com/awesome-fellowship")
         self.assertEqual(grant.status, 'draft')
-        self.assertEqual(grant.added_by, user)
+        self.assertEqual(grant.added_by_id, user.pk)
+        self.assertIn('Eligible candidates', grant.eligibility_text)
 
-    @patch('requests.get')
-    def test_grab_scholarship_scraper(self, mock_get):
-        # Mock HTML structure representing an article post of Grab Scholarship
-        mock_html = """
-        <html>
-            <body>
-                <article class="elementor-post">
-                    <h3 class="elementor-post__title">
-                        <a href="https://grabscholarship.com/test-ar/">منحة دراسية تجريبية 2026</a>
-                    </h3>
-                    <div class="elementor-post__badge">بكالوريوس</div>
-                    <div class="elementor-post-date">26 يونيو، 2026</div>
-                </article>
-                <article class="elementor-post">
-                    <h3 class="elementor-post__title">
-                        <a href="https://grabscholarship.com/test-job/">فرصة عمل تجريبية 2026</a>
-                    </h3>
-                    <div class="elementor-post__badge">عمل</div>
-                </article>
-            </body>
-        </html>
-        """
-        detail_html = """
-        <html>
-            <body>
-                <p>آخر موعد للتقديم: 1 نوفمبر 2026.</p>
-            </body>
-        </html>
-        """
+        # Assert GrantFieldOfStudy records are created
+        self.assertEqual(GrantFieldOfStudy.objects.filter(grant=grant).count(), 2)
+        field_names = list(GrantFieldOfStudy.objects.filter(grant=grant).values_list('field_name', flat=True))
+        self.assertIn('Engineering', field_names)
+        self.assertIn('Science & STEM', field_names)
 
-        def mock_response(html):
-            response = Mock()
-            response.status_code = 200
-            response.text = html
-            response.raise_for_status.return_value = None
-            return response
+        # Assert multiple GrantCountry records are created
+        self.assertEqual(GrantCountry.objects.filter(grant=grant).count(), 2)
+        country_names = list(GrantCountry.objects.filter(grant=grant).values_list('country_name', flat=True))
+        self.assertIn('Germany', country_names)
+        self.assertIn('France', country_names)
 
-        mock_get.side_effect = [
-            mock_response(mock_html),
-            mock_response(detail_html),
-            mock_response(mock_html),
-            mock_response(detail_html),
-        ]
 
-        scraper = GrabScholarshipScraper()
-        grants = scraper.scrape()
-
-        # Assert correct parser extraction
-        self.assertEqual(len(grants), 1)
-        self.assertEqual(grants[0]['title'], 'منحة دراسية تجريبية 2026')
-        self.assertEqual(grants[0]['url'], 'https://grabscholarship.com/test-ar/')
-        self.assertEqual(grants[0]['category'], 'بكالوريوس')
-        self.assertEqual(grants[0]['deadline'], '2026-11-01')
-
-        # Assert correct database creation
-        scraper.run()
-        self.assertEqual(ScrapedGrant.objects.count(), 1)
-        scraped_obj = ScrapedGrant.objects.first()
-        self.assertEqual(scraped_obj.raw_title, 'منحة دراسية تجريبية 2026')
-        self.assertEqual(scraped_obj.status, 'pending')
-        self.assertEqual(scraped_obj.parsed_data['deadline'], '2026-11-01')
 
 

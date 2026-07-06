@@ -286,48 +286,196 @@
           {% endif %}
         </span>
       </div>
-    </div>
-
-    {# ── Parsed Data ── #}
-    <div class="detail-card">
-      <h3>Parsed Data</h3>
-      {% for key, value in scraped.parsed_data.items %}
       <div class="detail-row">
-        <span class="detail-label">{{ key|capfirst }}</span>
+        <span class="detail-label">Reviewed By</span>
         <span class="detail-value">
-          {% if key == 'url' %}
-            <a href="{{ value }}" target="_blank" rel="noopener"
-               style="color:var(--accent, #6366f1);">{{ value|truncatechars:80 }}</a>
-          {% elif key == 'degree_types' %}
-            {# Render list as comma-separated string, e.g. Master, Bachelor #}
-            {% if value %}
-              {{ value|join:", " }}
-            {% else %}
-              —
-            {% endif %}
-          {% elif key == 'description' %}
-            {# Show the full description in a readable block — no clipping #}
-            <div style="
-              background: var(--surface2, #f8fafc);
-              border: 1px solid var(--border, #e2e8f0);
-              border-radius: 8px;
-              padding: 0.75rem 1rem;
-              white-space: pre-wrap;
-              word-break: break-word;
-              font-size: 0.875rem;
-              line-height: 1.7;
-              color: var(--fg, #1e293b);
-            ">{{ value|default:"—" }}</div>
+          {% if scraped.reviewed_by %}
+            {{ scraped.reviewed_by.username }}
+            {% if scraped.reviewed_by.full_name %}({{ scraped.reviewed_by.full_name }}){% endif %}
           {% else %}
-            {{ value|default:"—" }}
+            <span style="color:var(--muted,#94a3b8);">Not reviewed yet</span>
           {% endif %}
         </span>
       </div>
-      {% empty %}
-      <p style="color:var(--muted); font-size:0.875rem;">No parsed data available.</p>
-      {% endfor %}
+    </div>
+
+    {# ── Grant Info ── #}
+    <div class="detail-card">
+      <h3>Grant Info</h3>
+
+      <div class="detail-row">
+        <span class="detail-label">Organization</span>
+        <span class="detail-value">{{ scraped.parsed_data.organization|default:"—" }}</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="detail-label">Category</span>
+        <span class="detail-value">{{ scraped.parsed_data.category|default:"—" }}</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="detail-label">Deadline</span>
+        <span class="detail-value">
+          {% if scraped.parsed_data.deadline %}
+            <strong style="color:var(--accent,#6366f1);">{{ scraped.parsed_data.deadline }}</strong>
+          {% else %}
+            <span style="color:var(--muted,#94a3b8);">Not found</span>
+          {% endif %}
+        </span>
+      </div>
+
+      <div class="detail-row">
+        <span class="detail-label">Published At</span>
+        <span class="detail-value">{{ scraped.parsed_data.published_at|default:"—" }}</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="detail-label">Source URL</span>
+        <span class="detail-value">
+          {% if scraped.parsed_data.url %}
+            <a href="{{ scraped.parsed_data.url }}" target="_blank" rel="noopener"
+               style="color:var(--accent,#6366f1);">{{ scraped.parsed_data.url|truncatechars:90 }}</a>
+          {% else %}
+            —
+          {% endif %}
+        </span>
+      </div>
+    </div>
+
+    {# ── Classification ── #}
+    <div class="detail-card">
+      <h3>Classification</h3>
+
+      {# Countries — multi-value pills #}
+      <div class="detail-row">
+        <span class="detail-label">Countries</span>
+        <span class="detail-value">
+          {% if scraped.parsed_data.countries %}
+            {% for c in scraped.parsed_data.countries %}
+              <span style="display:inline-block;background:var(--surface2,#f1f5f9);border:1px solid var(--border,#e2e8f0);
+                           border-radius:20px;padding:2px 12px;font-size:0.8rem;margin:2px 3px 2px 0;">{{ c }}</span>
+            {% endfor %}
+          {% elif scraped.parsed_data.country %}
+            <span style="display:inline-block;background:var(--surface2,#f1f5f9);border:1px solid var(--border,#e2e8f0);
+                         border-radius:20px;padding:2px 12px;font-size:0.8rem;">{{ scraped.parsed_data.country }}</span>
+          {% else %}
+            <span style="color:var(--muted,#94a3b8);">None detected</span>
+          {% endif %}
+        </span>
+      </div>
+
+      {# Degree Types — purple pills #}
+      <div class="detail-row">
+        <span class="detail-label">Degree Types</span>
+        <span class="detail-value">
+          {% if scraped.parsed_data.degree_types %}
+            {% for d in scraped.parsed_data.degree_types %}
+              <span style="display:inline-block;background:#ede9fe;color:#5b21b6;border-radius:20px;
+                           padding:2px 12px;font-size:0.8rem;font-weight:600;margin:2px 3px 2px 0;">{{ d }}</span>
+            {% endfor %}
+          {% else %}
+            <span style="color:var(--muted,#94a3b8);">None detected</span>
+          {% endif %}
+        </span>
+      </div>
+
+      {# Fields of Study — green pills #}
+      <div class="detail-row">
+        <span class="detail-label">Fields of Study</span>
+        <span class="detail-value">
+          {% if scraped.parsed_data.fields_of_study %}
+            {% for f in scraped.parsed_data.fields_of_study %}
+              <span style="display:inline-block;background:#dcfce7;color:#166534;border-radius:20px;
+                           padding:2px 12px;font-size:0.8rem;font-weight:600;margin:2px 3px 2px 0;">{{ f }}</span>
+            {% endfor %}
+          {% else %}
+            <span style="color:var(--muted,#94a3b8);">None detected</span>
+          {% endif %}
+        </span>
+      </div>
+    </div>
+
+    {# ── Eligibility ── #}
+    <div class="detail-card">
+      <h3>Eligibility</h3>
+      {% if scraped.parsed_data.eligibility_text %}
+      <div style="
+        background: var(--surface2, #f8fafc);
+        border: 1px solid var(--border, #e2e8f0);
+        border-left: 3px solid #6366f1;
+        border-radius: 8px;
+        padding: 1rem 1.25rem;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-size: 0.875rem;
+        line-height: 1.75;
+        color: var(--fg, #1e293b);
+      ">{{ scraped.parsed_data.eligibility_text }}</div>
+      {% else %}
+        <p style="color:var(--muted,#94a3b8);font-size:0.875rem;margin:0;">
+          No eligibility text was extracted. <em>This field is extracted from detail pages — older scraped entries may not have it.</em>
+        </p>
+      {% endif %}
+    </div>
+
+    {# ── Description ── #}
+    <div class="detail-card">
+      <h3>Description</h3>
+      {% if scraped.parsed_data.description %}
+      <div style="
+        background: var(--surface2, #f8fafc);
+        border: 1px solid var(--border, #e2e8f0);
+        border-radius: 8px;
+        padding: 1rem 1.25rem;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-size: 0.875rem;
+        line-height: 1.75;
+        color: var(--fg, #1e293b);
+        max-height: 480px;
+        overflow-y: auto;
+      ">{{ scraped.parsed_data.description }}</div>
+      {% else %}
+        <p style="color:var(--muted,#94a3b8);font-size:0.875rem;margin:0;">No description available.</p>
+      {% endif %}
+    </div>
+
+    {# ── Raw HTML Snippet ── #}
+    {% if scraped.raw_html_snippet %}
+    <div class="detail-card">
+      <h3>Raw HTML Preview</h3>
+      <p style="font-size:0.8rem;color:var(--muted,#64748b);margin:0 0 0.75rem;">
+        The raw HTML of the article card as scraped from the source page.
+      </p>
+      <iframe
+        srcdoc="{{ scraped.raw_html_snippet }}"
+        style="width:100%;height:260px;border:1px solid var(--border,#e2e8f0);border-radius:8px;background:#fff;"
+        sandbox=""
+        title="Raw HTML preview">
+      </iframe>
+    </div>
+    {% endif %}
+
+    {# ── Raw JSON (collapsible) — safety net so no field is ever hidden ── #}
+    <div class="detail-card">
+      <h3 style="cursor:pointer;user-select:none;" onclick="
+        var b=document.getElementById('rawJsonBody');
+        var a=document.getElementById('rawJsonArrow');
+        b.style.display=b.style.display==='none'?'block':'none';
+        a.textContent=b.style.display==='none'?'▶':'▼';
+      ">
+        Raw JSON Data &nbsp;<span id="rawJsonArrow" style="font-size:0.75rem;color:var(--muted,#64748b);">▶</span>
+        <span style="font-size:0.75rem;font-weight:400;color:var(--muted,#94a3b8);margin-left:0.5rem;text-transform:none;letter-spacing:0;">
+          — click to expand all parsed_data keys
+        </span>
+      </h3>
+      <div id="rawJsonBody" style="display:none;">
+        <pre class="parsed-json">{{ scraped.parsed_data|safe }}</pre>
+      </div>
     </div>
 
   </main>
 </div>
 {% endblock %}
+
+
