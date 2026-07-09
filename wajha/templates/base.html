@@ -31,12 +31,12 @@
       {% if user.is_authenticated %}
         <a href="/matches/"><button type="button" {% if request.resolver_match.url_name == 'matches' %}class="active"{% endif %}>Matches</button></a>
         <a href="/assistant/"><button type="button" {% if request.resolver_match.url_name == 'assistant' %}class="active"{% endif %}>Assistant</button></a>
-        <a href="/dashboard/"><button type="button" {% if request.resolver_match.url_name == 'dashboard' %}class="active"{% endif %}>Dashboard</button></a>
-        <a href="{% url 'profile' %}"><button type="button" {% if request.resolver_match.url_name == 'profile' %}class="active"{% endif %}>Profile</button></a>
+        <a href="/dashboard/"><button type="button" {% if request.resolver_match.url_name == 'dashboard_shortcut' %}class="active"{% endif %}>Dashboard</button></a>
+        <a href="{% url 'profile' %}"><button type="button"  {% if request.resolver_match.url_name == 'profile' or request.resolver_match.url_name == 'profile_setup' %} class="active"{% endif %}>Profile</button></a>
 
         {% if user.role == "admin" or user.is_staff %}
         <a href="{% url 'grants:admin_grants' %}">
-        <button type="button" {% if request.resolver_match.url_name == 'admin_grants' %}class="active"{% endif %}>Admin</button>
+        <button type="button" {% if request.resolver_match.url_name == 'admin_grants' or request.resolver_match.namespace == 'grants' or request.resolver_match.namespace == 'scrapers' or request.resolver_match.url_name == 'admin_users' %}class="active"{% endif %}>Admin</button>
         </a>
       {% endif %}
 
