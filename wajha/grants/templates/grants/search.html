@@ -2,7 +2,78 @@
 {% load static %}
 
 {% block title %}Search Grants — Wajha{% endblock %}
+<style>
+  @media (max-width: 980px) {
+    .browse-shell {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 24px !important;
+      padding: 12px !important;
+    }
 
+    .filters-panel {
+      width: 100% !important;
+      display: grid !important;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important;
+      gap: 16px !important;
+      padding: 16px !important;
+      background: var(--surface-soft, #f8fafc) !important;
+      border-radius: 12px !important;
+      border: 1px solid var(--line, #e2e8f0) !important;
+    }
+
+    #clearBtn {
+      grid-column: 1 / -1 !important;
+      margin-top: 0 !important;
+    }
+
+    .lcard {
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      gap: 14px !important;
+      padding: 16px !important;
+      position: relative;
+    }
+
+    .lcard-thumb {
+      display: inline-flex !important;
+      margin-bottom: 4px;
+    }
+
+    .lcard-right {
+      width: 100% !important;
+      display: flex !important;
+      flex-direction: row !important;
+      justify-content: space-between !important;
+      align-items: center !important;
+      border-top: 1px dashed var(--line, #e2e8f0);
+      padding-top: 12px;
+      margin-top: 4px;
+    }
+
+    .lcard-right .deadline {
+      margin-bottom: 0 !important;
+      text-align: left !important;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .filters-panel {
+      grid-template-columns: 1fr !important;
+    }
+    
+    .lcard-right {
+      flex-direction: column !important;
+      align-items: dashed !important;
+      gap: 10px !important;
+    }
+    
+    .lcard-right .save-btn {
+      width: 100% !important;
+      text-align: center;
+    }
+  }
+</style>
 {% block content %}
 <section class="page active">
   <div class="browse-shell">

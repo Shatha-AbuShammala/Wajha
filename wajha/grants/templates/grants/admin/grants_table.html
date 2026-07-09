@@ -5,7 +5,6 @@
 
 {% block extra_head %}
 <style>
-  /* ── Organization chip — same style as Scraped Queue ── */
   .source-chip {
     display: inline-block;
     font-size: 0.72rem;
@@ -18,6 +17,89 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+  @media (max-width: 768px) {
+    .admin-main {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    table, th, td, .admin-table-row-actions {
+      white-space: nowrap;
+    }
+  }
+  @media (max-width: 980px) {
+    .admin-shell {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 1.5rem;
+      padding: 1rem;
+    }
+
+    .admin-side {
+      width: 100% !important;
+      display: flex !important;
+      flex-direction: row !important;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      padding: 0.75rem 0 !important;
+      border-right: none !important;
+      border-bottom: 1px solid var(--line, #e2e8f0);
+    }
+
+    .admin-side .al {
+      width: 100%;
+      margin-bottom: 0.25rem;
+    }
+
+    .admin-main {
+      padding: 0 !important;
+    }
+
+    .admin-link.active {
+      color: var(--orange, #f97316) !important;
+      font-weight: 600;
+    }
+
+    .admin-link.active::after {
+      content: "";
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: var(--orange, #f97316);
+      border-radius: 2px;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .admin-top {
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      gap: 12px;
+    }
+
+    .admin-search {
+      width: 100%;
+      display: flex;
+      gap: 8px !important;
+    }
+
+    .admin-search form {
+      flex: 1;
+    }
+
+    .admin-search input {
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .admin-search .btn {
+      white-space: nowrap;
+      height: 100%;
+    }
   }
 </style>
 {% endblock %}

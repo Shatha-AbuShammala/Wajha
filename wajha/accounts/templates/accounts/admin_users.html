@@ -2,6 +2,88 @@
 {% load static %}
 
 {% block title %}Manage Users — Wajha{% endblock %}
+<!-- {% block extra_head %}
+<style>
+  @media (max-width: 992px) {
+    .admin-shell {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 1.5rem;
+      padding: 1rem;
+    }
+
+    .admin-side {
+      width: 100% !important;
+      display: flex !important;
+      flex-direction: row !important;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      padding: 0.75rem 0 !important;
+      border-right: none !important;
+      border-bottom: 1px solid var(--line, #e2e8f0);
+    }
+
+    .admin-side .al {
+      width: 100%;
+      margin-bottom: 0.25rem;
+    }
+
+    .admin-main {
+      padding: 0 !important;
+    }
+
+    .admin-stats-grid {
+      grid-template-columns: repeat(2, 1fr) !important;
+      gap: 1rem !important;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .admin-top {
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      gap: 1rem;
+    }
+
+    .admin-search, .admin-search form, .admin-search input {
+      width: 100% !important;
+    }
+
+    /* الحاوية التي ستجبر الجدول على التمرير */
+    .table-container {
+      width: 100%;
+      overflow-x: auto !important;
+      display: block !important; 
+      -webkit-overflow-scrolling: touch;
+      margin-bottom: 1rem;
+      border: 1px solid var(--line, #e2e8f0);
+      border-radius: 8px;
+    }
+
+    .table-container table {
+      width: 100% !important;
+      min-width: 800px !important; 
+    }
+    
+    .table-container th, .table-container td {
+      white-space: nowrap !important;
+    }
+    
+    .table-foot {
+      flex-direction: column;
+      gap: 1rem;
+      align-items: center;
+      text-align: center;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .admin-stats-grid {
+      grid-template-columns: 1fr !important;
+    }
+  }
+</style>
+{% endblock %} -->
 
 {% block content %}
 <div class="admin-shell">

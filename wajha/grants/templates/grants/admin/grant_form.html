@@ -32,6 +32,30 @@
         text-uppercase: uppercase;
         letter-spacing: 0.5px;
     }
+    @media (max-width: 992px) {
+    .admin-shell {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 1.5rem;
+      padding: 1rem;
+    }
+
+    .admin-side {
+      width: 100% !important;
+      display: flex !important;
+      flex-direction: row !important;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      padding: 0.75rem 0 !important;
+      border-right: none !important;
+      border-bottom: 1px solid var(--line, #e2e8f0);
+    }
+
+    .admin-side .al {
+      width: 100%;
+      margin-bottom: 0.25rem;
+    }
+       }
 </style>
 
 <div class="admin-shell" style="min-height: 100vh;">
