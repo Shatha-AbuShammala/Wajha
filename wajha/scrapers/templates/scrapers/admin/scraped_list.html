@@ -75,7 +75,6 @@
       padding: 1rem;
     }
 
-    /* جعل السايدبار مرن في الأعلى */
     .admin-side {
       width: 100% !important;
       display: flex !important;
@@ -99,7 +98,7 @@
       color: var(--orange, #f97316) !important;
       font-weight: 600;
     }
-    .admin-link.active::after {
+    /* .admin-link.active::after {
       content: "";
       position: absolute;
       bottom: -2px;
@@ -108,9 +107,8 @@
       height: 2px;
       background: var(--orange, #f97316);
       border-radius: 2px;
-    }
+    } */
 
-    /* السكرول السحري للجدول اللي زبط بالصفحة الأولى */
     .admin-main {
       width: 100%;
       overflow-x: auto;
@@ -120,11 +118,10 @@
       white-space: nowrap;
     }
 
-    /* ── هان المكان الصح بالظبط للحل الجديد ── */
     .admin-main table td a {
       display: inline-block;
       vertical-align: middle;
-      max-width: 220px; /* بيقص العنوان بنقاط قبل ما يوصل للـ Chip */
+      max-width: 220px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -140,7 +137,6 @@
     .admin-search {
       width: 100%;
     }
-    /* منع الفورم العريض من تدمير أبعاد الصفحة لتسمح للجدول بالسكرول */
     .admin-search form {
       flex-wrap: wrap !important;
     }
