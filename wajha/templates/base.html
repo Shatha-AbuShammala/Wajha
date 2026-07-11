@@ -26,8 +26,9 @@
     </a>
 
     <nav class="nav-pages" id="navPages">
-      <a href="{% url 'grants:search' %}"><button type="button" {% if request.resolver_match.url_name == 'search' %}class="active"{% endif %}>Search</button></a>
-
+      <a href="{% url 'grants:search' %}">
+        <button type="button" {% if request.resolver_match.url_name == 'search' or '/grants/' in request.path and not request.GET.back and 'manage' not in request.path and 'edit' not in request.path %}class="active"{% endif %}>Search</button>      
+      </a>
       {% if user.is_authenticated %}
         <a href="/matches/"><button type="button" {% if request.resolver_match.url_name == 'matches' %}class="active"{% endif %}>Matches</button></a>
         <a href="/assistant/"><button type="button" {% if request.resolver_match.url_name == 'assistant' %}class="active"{% endif %}>Assistant</button></a>
@@ -36,9 +37,9 @@
 
         {% if user.role == "admin" or user.is_staff %}
         <a href="{% url 'grants:admin_grants' %}">
-        <button type="button" {% if request.resolver_match.url_name == 'admin_grants' or request.resolver_match.namespace == 'grants' or request.resolver_match.namespace == 'scrapers' or request.resolver_match.url_name == 'admin_users' %}class="active"{% endif %}>Admin</button>
-        </a>
-      {% endif %}
+          <button type="button" {% if request.resolver_match.url_name == 'admin_grants' or request.resolver_match.url_name == 'manage' or request.resolver_match.namespace == 'scrapers' or request.resolver_match.url_name == 'admin_users' or 'manage' in request.GET.back or 'manage' in request.path %}class="active"{% endif %}>Admin</button>        </a>
+          </a>
+          {% endif %}
 
         <form method="post" action="{% url 'logout' %}" style="display:inline;">
           {% csrf_token %}
