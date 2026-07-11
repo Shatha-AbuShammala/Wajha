@@ -43,7 +43,7 @@ class Command(BaseCommand):
             ]
             if not scrapers_to_run:
                 self.stderr.write(
-                    self.style.ERROR(f'No scraper found with source_name="{target}"')
+                    self.s5tyle.ERROR(f'No scraper found with source_name="{target}"')
                 )
                 return
 
