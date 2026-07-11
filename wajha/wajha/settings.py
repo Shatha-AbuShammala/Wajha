@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 """
 Django settings for wajha project.
 
@@ -226,7 +225,6 @@ SOCIALACCOUNT_AUTO_SIGNUP = True
 
 # Gemini Key
 GEMINI_API_KEY = config('GEMINI_API_KEY')
-=======
 """
 Django settings for wajha project.
 
@@ -475,4 +473,3 @@ CELERY_BEAT_SCHEDULE = {
         'schedule': crontab(hour=0, minute=0, day_of_week='monday'),
     },
 }
->>>>>>> 57cb645668cd15320ecf068962556255201de244
