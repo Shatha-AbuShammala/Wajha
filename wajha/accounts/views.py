@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .forms import SignUpForm, ProfileSetupForm, EmailAuthenticationForm
+from .forms import SignUpForm, ProfileSetupForm, EmailAuthenticationForm , DocumentUploadForm
 from django.core.paginator import Paginator
 from django.utils import timezone
 from django.contrib.auth.decorators import user_passes_test
@@ -14,6 +14,7 @@ from django.urls import reverse
 from urllib.parse import urlencode
 from django.template.loader import render_to_string
 from django.core.mail import EmailMultiAlternatives
+from .models import Document
 
 
 # ===================== EMAIL FUNCTIONS =====================
@@ -189,6 +190,8 @@ def profile_view(request):
         'profile_user': request.user,
         'profile_strength': calculate_profile_strength(request.user),
         'profile_gaps': get_profile_gaps(request.user),
+        'documents': request.user.documents.all().order_by('-uploaded_at'),
+        'document_form': DocumentUploadForm(),
     }
     return render(request, 'accounts/profile.html', context)
 
@@ -302,3 +305,24 @@ def delete_user_view(request, user_id):
     messages.success(request, f"User '{username}' and all associated data have been deleted.")
     return redirect('admin_users')
 
+@login_required
+def document_upload_view(request):
+    if request.method == 'POST':
+        form = DocumentUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            doc = form.save(commit=False)
+            doc.user = request.user
+            doc.save()
+            messages.success(request, "Document uploaded successfully.")
+        else:
+            messages.error(request, "Upload failed — please check the file and try again.")
+    return redirect('profile')
+
+
+@login_required
+@require_POST
+def document_delete_view(request, doc_id):
+    doc = get_object_or_404(Document, id=doc_id, user=request.user)
+    doc.delete()
+    messages.success(request, "Document deleted.")
+    return redirect('profile')
