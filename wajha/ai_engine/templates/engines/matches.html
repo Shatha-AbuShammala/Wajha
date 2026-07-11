@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}GrantPal — AI Matches{% endblock %}
+
+{% block extra_head %}
+<style>
+    .mcard-title-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .mcard-title-row h4 {
+        margin: 0;
+    }
+
+    .dial-track {
+        stroke: var(--bg-soft);
+    }
+
+    html.dark .dial-track {
+        stroke: var(--line);
+    }
+
+    .dial-wrap.is-strong .dial-ring,
+    .dial-wrap.is-good .dial-ring {
+        stroke: var(--green);
+    }
+
+    .dial-wrap.is-strong .dial-pct,
+    .dial-wrap.is-good .dial-pct {
+        color: var(--green);
+    }
+
+    .dial-wrap.is-fair .dial-ring {
+        stroke: var(--orange);
+    }
+
+    .dial-wrap.is-fair .dial-pct {
+        color: var(--orange);
+    }
+
+    .toast-notification {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        background: #10b981;
+        color: #fff;
+        padding: 12px 24px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        font-size: 14px;
+        font-weight: 600;
+        z-index: 1000;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: all 0.3s;
+        pointer-events: none;
+    }
+
+    .toast-notification.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="shell" style="padding-top: 32px; padding-bottom: 80px;">
+
+    <div class="match-banner">
+        <div class="match-banner-left">
+            <div class="ai-orb">✦</div>
+            <div>
+                <h3><span id="total-count-text">{{ total_count }}</span> grants matched to your profile</h3>
+                <p>Ranked by genuine fit — CS · Masters · Palestine · entrepreneurship experience</p>
+            </div>
+        </div>
+        <button id="update-profile-btn" class="btn btn-ghost btn-sm">
+            Update profile ▸
+        </button>
+    </div>
+
+    <div id="matches-container" class="match-list">
+        {% for match in matches %}
+        {% widthratio match.match_score 100 176 as ring_fill %}
+        <div class="mcard">
+            <div class="dial-wrap {% if match.fit_status == 'strong fit' %}is-strong{% elif match.fit_status == 'good fit' %}is-good{% else %}is-fair{% endif %}">
+                <svg class="dial" viewBox="0 0 64 64" style="transform: rotate(-90deg);">
+                    <circle class="dial-track" cx="32" cy="32" r="28" fill="none" stroke-width="5" />
+                    <circle class="dial-ring" cx="32" cy="32" r="28" fill="none" stroke-width="5"
+                        stroke-linecap="round" stroke-dasharray="{{ ring_fill }}, 176" />
+                </svg>
+                <div class="dial-pct">{{ match.match_score|floatformat:0 }}%</div>
+                <div class="dial-label">{{ match.fit_status }}</div>
+            </div>
+
+            <div class="mcard-mid">
+                <div class="mcard-title-row">
+                    <h4>{{ match.grant.title }}</h4>
+                    <span class="pill pill-level">Masters</span>
+                </div>
+
+                <div class="meta-line">
+                    {% if match.grant.organization %}{{ match.grant.organization }}{% else %}DAAD{% endif %} ·
+                    Germany · fully funded · ⏳ {{ match.grant.days_until_deadline }} days
+                </div>
+
+                <div class="why-box">
+                    <b>Why it fits →</b> {{ match.explanation }}
+                </div>
+            </div>
+
+            <div class="mcard-actions">
+                <button onclick="saveGrant({{ match.grant.id }}, this)"
+                    class="btn btn-sm btn-block {% if match.grant.id in saved_grant_ids %}btn-dark{% else %}btn-primary{% endif %}">
+                    {% if match.grant.id in saved_grant_ids %}Saved ✓{% else %}Save +{% endif %}
+                </button>
+
+                <a href="{% url 'grants:detail' match.grant.pk %}" class="btn btn-ghost btn-sm btn-block">
+                    View
+                </a>
+            </div>
+        </div>
+        {% empty %}
+        <div class="doc-empty" style="margin-top: 40px;">
+            <h3 style="font-size: 18px; font-weight: 600; color: var(--fg); margin-bottom: 8px;">No matches found yet</h3>
+            <p>Click update profile to calculate your smart match scores based on your profile.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Toast Feedback Notification -->
+<div id="toast" class="toast-notification">✓ Action Completed!</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const SAVE_PRIMARY = 'btn btn-primary btn-sm btn-block';
+    const SAVE_SAVED = 'btn btn-dark btn-sm btn-block';
+
+    function showToast(message, bgColor = '#10b981') {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.style.backgroundColor = bgColor;
+        toast.classList.add('show');
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 3000);
+    }
+
+    document.getElementById('update-profile-btn').addEventListener('click', function () {
+        const btn = this;
+        btn.disabled = true;
+        btn.innerHTML = 'Checking...';
+
+        fetch('', {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert('Error updating matches.');
+                    btn.disabled = false;
+                    btn.innerHTML = 'Update profile ▸';
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                btn.disabled = false;
+                btn.innerHTML = 'Update profile ▸';
+            });
+    });
+
+    function saveGrant(grantId, btn) {
+        fetch(`/applications/save/${grantId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'X-Requested-With': 'XMLHttpRequest',
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.saved) {
+                    btn.innerHTML = 'Saved ✓';
+                    btn.className = SAVE_SAVED;
+                    showToast('Draft saved to your application dashboard!');
+                } else {
+                    btn.innerHTML = 'Save +';
+                    btn.className = SAVE_PRIMARY;
+                    showToast('Removed from your saved grants', '#ef4444');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showToast('Error connecting to the server', '#ef4444');
+            });
+    }
+</script>
+{% endblock %}
