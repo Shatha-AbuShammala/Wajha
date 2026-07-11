@@ -15,7 +15,8 @@ urlpatterns = [
     path("", landing_view, name="home"),
     path("about/", about_view, name="about"),
     path('applications/', include('applications.urls')),
-    path('dashboard/', dashboard, name='dashboard_shortcut'),   
+    path('dashboard/', dashboard, name='dashboard_shortcut'),
+    path('', include('ai_engine.urls')),
 
 
 ]

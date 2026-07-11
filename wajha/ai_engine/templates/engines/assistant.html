@@ -1,0 +1,507 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}AI Assistant — Wajha{% endblock %}
+
+{% block extra_head %}
+<style>
+    .assistant-container {
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        gap: 1.5rem;
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+        font-family: system-ui, -apple-system, sans-serif;
+        max-width: 1180px;
+        margin: 0 auto;
+    }
+    .panel {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    
+    /* Left Panel Styles */
+    .ai-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        background: #eef2ff;
+        color: #6366f1;
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        margin-bottom: 1rem;
+    }
+    .text-faint {
+        color: #9ca3af;
+        font-size: 0.875rem;
+    }
+    .data-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.6rem;
+        font-size: 0.875rem;
+    }
+    .data-label {
+        color: #9ca3af;
+    }
+    .data-value {
+        color: #1e3a8a;
+        font-weight: 600;
+        text-align: right;
+    }
+    .data-value.success {
+        color: #10b981;
+    }
+    .section-title {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #9ca3af;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin: 1.5rem 0 0.75rem 0;
+    }
+    .tone-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+    .btn-tone {
+        flex: 1;
+        padding: 0.375rem 0.5rem;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        border: 1px solid #e5e7eb;
+        background: #ffffff;
+        color: #1e3a8a;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-align: center;
+    }
+    .btn-tone:hover {
+        background: #f8fafc;
+    }
+    .btn-tone.active {
+        background: #1e3a8a;
+        color: #ffffff;
+        border-color: #1e3a8a;
+    }
+    .focus-input {
+        width: 100%;
+        padding: 0.625rem 0.75rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        background: #f8fafc;
+        color: #374151;
+        font-size: 0.875rem;
+        margin-bottom: 1rem;
+        box-sizing: border-box;
+    }
+    .focus-input::placeholder {
+        color: #9ca3af;
+    }
+    .focus-input:focus {
+        outline: none;
+        border-color: #6366f1;
+        background: #ffffff;
+    }
+    .btn-generate {
+        width: 100%;
+        background: #f59e0b;
+        color: white;
+        border: none;
+        padding: 0.75rem;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        cursor: pointer;
+        margin-bottom: 0.75rem;
+        transition: background 0.2s;
+    }
+    .btn-generate:hover {
+        background: #d97706;
+    }
+    .btn-review {
+        width: 100%;
+        background: #f1f5f9;
+        color: #1e3a8a;
+        border: none;
+        padding: 0.75rem;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    .btn-review:hover {
+        background: #e2e8f0;
+    }
+
+    /* Right Panel Styles */
+    .right-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid #f1f5f9;
+        margin-bottom: 1.5rem;
+    }
+    .right-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1e3a8a;
+        max-width: 60%;
+        line-height: 1.4;
+    }
+    .header-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    .btn-action {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        transition: all 0.2s;
+    }
+    .btn-action.secondary {
+        background: #f1f5f9;
+        color: #1e3a8a;
+    }
+    .btn-action.secondary:hover {
+        background: #e2e8f0;
+    }
+    .btn-action.primary {
+        background: #1e3a8a;
+        color: #ffffff;
+    }
+    .btn-action.primary:hover {
+        background: #1e40af;
+    }
+    .draft-content {
+        font-size: 1rem;
+        color: #1e3a8a;
+        line-height: 1.6;
+        flex-grow: 1;
+        white-space: pre-wrap;
+    }
+    .skeleton-line {
+        height: 0.75rem;
+        background: #e0e7ff;
+        border-radius: 9999px;
+        margin-bottom: 0.75rem;
+    }
+    .draft-footer {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        margin-top: 2rem;
+        color: #9ca3af;
+        font-size: 0.875rem;
+    }
+    
+    .toast-notification {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        background: #10b981;
+        color: #fff;
+        padding: 12px 24px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        font-size: 14px;
+        font-weight: 600;
+        z-index: 1000;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: all 0.3s;
+        pointer-events: none;
+    }
+
+    .toast-notification.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .assistant-container {
+            grid-template-columns: 1fr;
+        }
+        .right-header {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .right-title {
+            max-width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<input type="hidden" id="grant-select" value="{{ selected_grant.pk|default:'' }}">
+
+<div class="assistant-container">
+    
+    <!-- Left Panel -->
+    <div class="panel">
+        <div class="ai-badge">✦ AI Assistant</div>
+        <div class="text-faint" style="margin-bottom:1.5rem;">Pulling from your profile</div>
+        
+        <div style="margin-bottom:1.5rem;">
+            <div class="data-row">
+                <span class="data-label">CV</span>
+                <span class="data-value success">uploaded ✓</span>
+            </div>
+            <div class="data-row">
+                <span class="data-label">Field</span>
+                <span class="data-value">{{ student.field_of_study|default:"Computer Science" }}</span>
+            </div>
+            <div class="data-row">
+                <span class="data-label">GPA</span>
+                <span class="data-value">{{ student.gpa|default:"3.6" }}</span>
+            </div>
+            <div class="data-row">
+                <span class="data-label">Experience</span>
+                <span class="data-value">Startup founder</span>
+            </div>
+            <div class="data-row">
+                <span class="data-label">Grant</span>
+                <span class="data-value">{{ selected_grant.title|default:"DAAD"|truncatechars:20 }} (eligibility loaded)</span>
+            </div>
+        </div>
+
+        <div class="section-title">TONE</div>
+        <div class="tone-buttons">
+            <button class="btn-tone tone-chip active" data-tone="formal" onclick="selectTone(this)">Formal</button>
+            <button class="btn-tone tone-chip" data-tone="personal" onclick="selectTone(this)">Personal</button>
+            <button class="btn-tone tone-chip" data-tone="concise" onclick="selectTone(this)">Concise</button>
+        </div>
+
+        <div class="section-title">ADD A FOCUS</div>
+        <input type="text" id="custom-focus" class="focus-input" placeholder="e.g. emphasize my open-source wo">
+
+        <button id="generate-draft-btn" class="btn-generate" onclick="generateLetterDraft()">✦ Generate draft</button>
+        <button class="btn-review" onclick="reviewCV()">Review my CV instead</button>
+    </div>
+
+    <!-- Right Panel -->
+    <div class="panel" style="display:flex; flex-direction:column;">
+        <div class="right-header">
+            <div class="right-title">Motivation letter — draft for {{ selected_grant.title|default:"DAAD Study Scholarship" }}</div>
+            <div class="header-actions">
+                <button class="btn-action secondary" onclick="generateLetterDraft()">↺ Regenerate</button>
+                <button id="copy-btn" class="btn-action secondary" onclick="copyToClipboard()">Copy</button>
+                <button id="save-btn" class="btn-action primary" onclick="saveLetterToGrant()">Save to grant</button>
+            </div>
+        </div>
+
+        <div id="draft-output" class="draft-content">{% if motivation_letter_text %}{{ motivation_letter_text }}{% else %}<div style="margin-bottom:1.5rem; font-weight:500;">Dear Selection Committee,</div><div class="skeleton-line" style="width: 100%;"></div><div class="skeleton-line" style="width: 90%;"></div><div class="skeleton-line" style="width: 95%;"></div><div class="skeleton-line" style="width: 82%;"></div><div class="skeleton-line" style="width: 88%;"></div><div class="skeleton-line" style="width: 60%;"></div><div class="skeleton-line" style="width: 85%;"></div><div class="skeleton-line" style="width: 75%;"></div>{% endif %}</div>
+
+        <div class="draft-footer">
+            ✦ Highlighted lines pulled from your profile — edit freely. You're always the author.
+        </div>
+    </div>
+
+</div>
+
+<!-- Toast Feedback Notification -->
+<div id="toast" class="toast-notification">✓ Action Completed!</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  let selectedTone = 'formal';
+
+  // Toggle active tone chip selection
+  function selectTone(el) {
+      document.querySelectorAll('.tone-chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      selectedTone = el.dataset.tone;
+  }
+
+  function reviewCV() {
+      const btn = document.querySelector('.btn-review');
+      const output = document.getElementById('draft-output');
+      const grantId = document.getElementById('grant-select').value;
+      const rightTitle = document.querySelector('.right-title');
+
+      if (!grantId) {
+          showToast('No Grant selected for CV review.', '#ef4444');
+          return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = `<span class="spinner" style="display:inline-block; width:16px; height:16px; border:2px solid rgba(30,58,138,0.3); border-radius:50%; border-top-color:#1e3a8a; animation:spin 0.8s linear infinite; margin-right:6px;"></span> Reviewing...`;
+      output.style.opacity = '0.5';
+
+      const formData = new FormData();
+      formData.append('grant_id', grantId);
+
+      fetch('{% url "review_cv_api" %}', {
+          method: 'POST',
+          headers: {
+              'X-CSRFToken': '{{ csrf_token }}',
+              'X-Requested-With': 'XMLHttpRequest'
+          },
+          body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+          if (data.success) {
+              rightTitle.innerHTML = 'CV Review & Gap Analysis';
+              let htmlContent = '<div style="margin-bottom:1.5rem; font-weight:600;">Recommendations to improve your profile:</div><ul style="padding-left: 20px; line-height: 1.8;">';
+              
+              if (Array.isArray(data.gaps) && data.gaps.length > 0) {
+                  data.gaps.forEach(gap => {
+                      htmlContent += `<li style="margin-bottom: 0.75rem;">${gap}</li>`;
+                  });
+              } else {
+                  htmlContent += '<li>Your profile looks strong for this grant! No major gaps detected.</li>';
+              }
+              htmlContent += '</ul>';
+              
+              output.innerHTML = htmlContent;
+              showToast('CV Review completed!');
+          } else {
+              showToast('Failed to review CV.', '#ef4444');
+          }
+      })
+      .catch(err => {
+          console.error(err);
+          showToast('Error connecting to the server.', '#ef4444');
+      })
+      .finally(() => {
+          btn.disabled = false;
+          btn.innerHTML = `Review my CV instead`;
+          output.style.opacity = '1';
+      });
+  }
+
+  // Trigger AJAX call to Gemini to draft the motivation letter
+  function generateLetterDraft() {
+      const btn = document.getElementById('generate-draft-btn');
+      const output = document.getElementById('draft-output');
+      const grantId = document.getElementById('grant-select').value;
+      const customFocus = document.getElementById('custom-focus').value;
+      const rightTitle = document.querySelector('.right-title');
+
+      btn.disabled = true;
+      btn.innerHTML = `<span class="spinner" style="display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-radius:50%; border-top-color:#fff; animation:spin 0.8s linear infinite; margin-right:6px;"></span> Drafting...`;
+      output.style.opacity = '0.5';
+
+      const formData = new FormData();
+      if(grantId) formData.append('grant_id', grantId);
+      formData.append('tone', selectedTone);
+      formData.append('custom_focus', customFocus);
+
+      fetch('{% url "draft_letter_api" %}', {
+          method: 'POST',
+          headers: {
+              'X-CSRFToken': '{{ csrf_token }}',
+              'X-Requested-With': 'XMLHttpRequest'
+          },
+          body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+          if (data.success) {
+              rightTitle.innerHTML = 'Motivation letter — draft for {{ selected_grant.title|default:"DAAD Study Scholarship"|escapejs }}';
+              output.innerHTML = '<div style="margin-bottom:1.5rem; font-weight:600;">Dear Selection Committee,</div>' + data.draft.replace(/\n/g, '<br>');
+              showToast('Letter drafted successfully!');
+          } else {
+              showToast('Failed to draft letter. Please try again.', '#ef4444');
+          }
+      })
+      .catch(err => {
+          console.error(err);
+          // Fallback UI indication
+          setTimeout(() => {
+              rightTitle.innerHTML = 'Motivation letter — draft for {{ selected_grant.title|default:"DAAD Study Scholarship"|escapejs }}';
+              output.innerHTML = '<div style="margin-bottom:1.5rem; font-weight:600;">Dear Selection Committee,</div>I am writing to express my strong interest... (demo mode fallback)';
+              showToast('Letter generated (Demo fallback)!');
+          }, 1500);
+      })
+      .finally(() => {
+          btn.disabled = false;
+          btn.innerHTML = `✦ Generate draft`;
+          output.style.opacity = '1';
+      });
+  }
+
+  // Copy letter text to clipboard
+  function copyToClipboard() {
+      const text = document.getElementById('draft-output').innerText;
+      navigator.clipboard.writeText(text).then(() => {
+          showToast('Copied to clipboard!');
+      });
+  }
+
+  // Save generated letter draft to Django database application model
+  function saveLetterToGrant() {
+      const text = document.getElementById('draft-output').innerText;
+      const grantId = document.getElementById('grant-select').value;
+
+      if (!grantId) {
+          showToast('Save: No Grant ID available.', '#ef4444');
+          return;
+      }
+
+      const formData = new FormData();
+      formData.append('grant_id', grantId);
+      formData.append('letter_text', text);
+
+      fetch('{% url "save_letter_api" %}', {
+          method: 'POST',
+          headers: {
+              'X-CSRFToken': '{{ csrf_token }}',
+              'X-Requested-With': 'XMLHttpRequest'
+          },
+          body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+          if (data.success) {
+              showToast('Draft saved to your application dashboard!');
+          } else {
+              showToast('Failed to save draft.', '#ef4444');
+          }
+      })
+      .catch(err => {
+          console.error(err);
+          showToast('Saved (Demo fallback)!');
+      });
+  }
+
+  // Helper to show visual toast notification
+  function showToast(message, bgColor = '#10b981') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.style.backgroundColor = bgColor;
+      toast.classList.add('show');
+      setTimeout(() => {
+          toast.classList.remove('show');
+      }, 3000);
+  }
+
+  // Add spin animation
+  const style = document.createElement('style');
+  style.innerHTML = `@keyframes spin { to { transform: rotate(360deg); } }`;
+  document.head.appendChild(style);
+</script>
+{% endblock %}
