@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.core.validators import RegexValidator
-from .models import User
+from .models import Document, User
 import re
 
 
@@ -114,3 +114,12 @@ class ProfileSetupForm(forms.ModelForm):
         if commit:
             instance.save()
         return instance
+
+class DocumentUploadForm(forms.ModelForm):
+    class Meta:
+        model = Document
+        fields = ['document_type', 'file']
+        widgets = {
+            'document_type': forms.Select(attrs={'class': 'input'}),
+            'file': forms.ClearableFileInput(attrs={'class': 'input'}),
+        }
