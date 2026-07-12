@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 """
 Django settings for wajha project.
 
@@ -226,7 +225,7 @@ SOCIALACCOUNT_AUTO_SIGNUP = True
 
 # Gemini Key
 GEMINI_API_KEY = config('GEMINI_API_KEY')
-=======
+
 """
 Django settings for wajha project.
 
@@ -471,8 +470,7 @@ CELERY_TASK_TRACK_STARTED    = True
 CELERY_BEAT_SCHEDULE = {
     'run-all-scrapers-every-monday': {
         'task':     'scrapers.tasks.run_all_scrapers_task',
-        # Monday 00:00 UTC  =  Monday 03:00 AM Amman time (UTC+3)
+        # Monday 00:00 UTC  =  Monday 03:00 AM
         'schedule': crontab(hour=0, minute=0, day_of_week='monday'),
     },
 }
->>>>>>> 57cb645668cd15320ecf068962556255201de244
