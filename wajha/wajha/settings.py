@@ -223,28 +223,25 @@ SOCIALACCOUNT_EMAIL_REQUIRED = True
 SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'
 SOCIALACCOUNT_AUTO_SIGNUP = True
 
+# Gemini API key — must be set in .env
+GEMINI_API_KEY = config('GEMINI_API_KEY', default='')
 
 # ===================== Celery =====================
 
-from celery.schedules import crontab  # noqa: E402
-
-# Broker & result backend — set REDIS_URL in your .env
-CELERY_BROKER_URL    = config('REDIS_URL', default='redis://localhost:6379/0')
+CELERY_BROKER_URL = config('REDIS_URL', default='redis://localhost:6379/0')
 CELERY_RESULT_BACKEND = config('REDIS_URL', default='redis://localhost:6379/0')
 
-CELERY_TIMEZONE              = 'UTC'
-CELERY_ACCEPT_CONTENT        = ['json']
-CELERY_TASK_SERIALIZER       = 'json'
-CELERY_RESULT_SERIALIZER     = 'json'
-CELERY_TASK_TRACK_STARTED    = True
+CELERY_TIMEZONE = 'UTC'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TASK_TRACK_STARTED = True
 
-# ── Scheduled tasks ──────────────────────────────────────────────────────────
 CELERY_BEAT_SCHEDULE = {
     'run-all-scrapers-every-monday': {
-        'task':     'scrapers.tasks.run_all_scrapers_task',
-        # Monday 00:00 UTC  =  Monday 03:00 AM Amman time (UTC+3)
+        'task': 'scrapers.tasks.run_all_scrapers_task',
+        # Monday 00:00 UTC = Monday 03:00 AM Amman time (UTC+3)
         'schedule': crontab(hour=0, minute=0, day_of_week='monday'),
     },
 }
 
-GEMINI_API_KEY = config('GEMINI_API_KEY')

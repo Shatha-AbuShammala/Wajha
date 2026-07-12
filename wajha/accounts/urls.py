@@ -12,7 +12,8 @@ urlpatterns = [
     path('admin/users/<int:user_id>/toggle-admin/', views.toggle_admin_view, name='toggle_admin'),
     path('admin/users/<int:user_id>/toggle-active/', views.toggle_active_view, name='toggle_active'),
     path('admin/users/<int:user_id>/delete/', views.delete_user_view, name='delete_user'),
-
+    path('documents/upload/', views.document_upload_view, name='document_upload'),
+    path('documents/<int:doc_id>/delete/', views.document_delete_view, name='document_delete'),
     # ---- Password reset (4-step flow) ----
     path(
         'password-reset/',

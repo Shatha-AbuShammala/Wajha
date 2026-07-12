@@ -82,12 +82,13 @@
 
     <div>
       <div class="profile-tabs">
-
         <span class="profile-tab">Documents</span>
       </div>
       <p style="color:var(--fg-faint); font-size:13.5px;">
         All the files you upload will be saved here.
       </p>
+
+      <!-- CV (existing field, unchanged) -->
       {% if profile_user.cv_file %}
       <div class="doc-item">
         <div class="doc-icon">
@@ -106,9 +107,38 @@
           </a>
         </div>
       </div>
-      {% else %}
+      {% endif %}
+
+      <!-- Additional documents (Cover Letter, Personal Statement, etc.) -->
+      {% for doc in documents %}
+      <div class="doc-item">
+        <div class="doc-icon">
+          <i class="fa-regular fa-file-pdf"></i>
+        </div>
+        <div class="doc-body">
+          <div class="doc-name">{{ doc.get_document_type_display }}</div>
+          <div class="doc-meta">PDF · Uploaded {{ doc.uploaded_at|date:"M d, Y" }}</div>
+        </div>
+        <div class="doc-actions">
+          <a href="{{ doc.file.url }}" target="_blank" class="btn btn-ghost btn-sm">
+            <i class="fa-regular fa-eye"></i> View
+          </a>
+          <a href="{{ doc.file.url }}" download class="btn btn-ghost btn-sm">
+            <i class="fa-regular fa-arrow-down-to-line"></i> Download
+          </a>
+          <form method="post" action="{% url 'document_delete' doc.id %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-ghost btn-sm" style="color:var(--red);">
+              <i class="fa-regular fa-trash"></i> Delete
+            </button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+
+      <!-- Empty state (only if nothing at all uploaded) -->
+      {% if not profile_user.cv_file and not documents %}
       <div class="doc-empty">
-        <i class="fa-regular fa-file-arrow-up"></i>
         <p>No documents uploaded yet.</p>
         <a href="{% url 'profile_setup' %}" class="btn btn-ghost btn-sm" style="margin-top:10px;">
           Upload CV →
@@ -116,6 +146,26 @@
       </div>
       {% endif %}
 
+      <!-- Upload new document -->
+      <div class="pcard" style="margin-top:20px;">
+        <h4>Add a document</h4>
+        <form method="post" action="{% url 'document_upload' %}" enctype="multipart/form-data" style="margin-top:10px;">
+          {% csrf_token %}
+          <div class="form-row">
+            <div class="field">
+              <label>Type</label>
+              {{ document_form.document_type }}
+            </div>
+            <div class="field">
+              <label>File (PDF, max 5MB)</label>
+              {{ document_form.file }}
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm" style="margin-top:12px;">
+            Upload
+          </button>
+        </form>
+      </div>
     </div>
 
   </div>
