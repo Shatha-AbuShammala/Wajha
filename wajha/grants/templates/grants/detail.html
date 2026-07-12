@@ -21,6 +21,64 @@
       font-size: 1.6rem !important;
     }
   }
+
+  /* AI Eligibility Card */
+  .eligibility-card {
+      background: #f0f4ff;
+      border: 1px solid #dde5f8;
+      border-radius: 14px;
+      padding: 1.25rem 1.5rem 1rem;
+      margin-bottom: 2rem;
+  }
+  .eligibility-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      background: #e0e7ff;
+      color: #4f46e5;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.2rem 0.65rem;
+      border-radius: 9999px;
+      margin-bottom: 0.9rem;
+  }
+  .eligibility-list {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 0.75rem 0;
+  }
+  .eligibility-list li {
+      display: flex;
+      align-items: baseline;
+      gap: 0.55rem;
+      font-size: 0.9rem;
+      color: #1e293b;
+      margin-bottom: 0.55rem;
+      line-height: 1.5;
+  }
+  .eligibility-list li .eli-icon { flex-shrink: 0; font-size: 0.85rem; }
+  .eligibility-list li.met   .eli-icon { color: #22c55e; }
+  .eligibility-list li.unmet .eli-icon { color: #ef4444; }
+  .eligibility-list li.unknown .eli-icon { color: #94a3b8; }
+  .eli-status {
+      font-weight: 700;
+      color: #1e3a8a;
+  }
+  .eligibility-footer {
+      font-size: 0.75rem;
+      color: #94a3b8;
+  }
+  .eli-skeleton .sk-line {
+      height: 0.7rem;
+      background: #dde5f8;
+      border-radius: 9999px;
+      margin-bottom: 0.6rem;
+      animation: eli-pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes eli-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+  }
 </style>
 {% endblock %}
 
@@ -64,20 +122,31 @@
                 {% endfor %}
             </div>
 
-            <!-- AI Eligibility Box -->
-            {% if grant.eligibility_summary %}
-            <div style="background:var(--indigo-dim); border:1px solid var(--indigo); border-radius:14px; padding:1.5rem; margin-bottom:2rem;">
-                <div style="display:inline-flex; align-items:center; gap:0.4rem; background:var(--indigo); color:#fff; padding:0.2rem 0.6rem; border-radius:6px; font-size:0.8rem; margin-bottom:1rem;">
-                    ✦ AI eligibility, simplified
-                </div>
-                <div style="color:var(--fg); line-height:1.7;">
+            <!-- AI Eligibility Card -->
+            <div class="eligibility-card" id="eligibility-card">
+                <div class="eligibility-badge">✦ AI eligibility, simplified</div>
+
+                {% if user.is_authenticated %}
+                <!-- Personalized: loaded via AJAX for logged-in users -->
+                <ul class="eligibility-list" id="eligibility-list">
+                    <div class="eli-skeleton">
+                        <div class="sk-line" style="width:80%"></div>
+                        <div class="sk-line" style="width:65%"></div>
+                        <div class="sk-line" style="width:75%"></div>
+                        <div class="sk-line" style="width:55%"></div>
+                    </div>
+                </ul>
+                {% elif grant.eligibility_summary %}
+                <!-- Guest: show static summary -->
+                <div style="color:#1e293b; line-height:1.7; font-size:0.9rem;">
                     {{ grant.eligibility_summary|linebreaks }}
                 </div>
-                <div style="color:var(--fg-faint); font-size:0.8rem; margin-top:1rem;">
-                    Generated from the official eligibility page · also available in العربية
-                </div>
+                {% else %}
+                <p style="color:#94a3b8; font-size:0.875rem;">Sign in to see personalized eligibility analysis.</p>
+                {% endif %}
+
+                <div class="eligibility-footer">Generated from the official eligibility page &middot; also available in <a href="#" style="color:#6366f1;text-decoration:none;">العربية</a></div>
             </div>
-            {% endif %}
 
             <!-- About this grant -->
             <div style="margin-bottom:2rem;">
@@ -244,5 +313,80 @@
         }
         return cookieValue;
     }
+
+    {% if user.is_authenticated %}
+    // --------------------------------------------------------
+    // Load personalized eligibility points via AI (cached in localStorage)
+    // --------------------------------------------------------
+    document.addEventListener('DOMContentLoaded', function () {
+        const list    = document.getElementById('eligibility-list');
+        if (!list) return;
+
+        const CACHE_KEY = 'eli_{{ grant.pk }}_{{ request.user.pk }}';
+        const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours in ms
+
+        // Try reading from cache first
+        try {
+            const cached = JSON.parse(localStorage.getItem(CACHE_KEY));
+            if (cached && (Date.now() - cached.ts) < CACHE_TTL) {
+                renderPoints(cached.points);
+                return;
+            }
+        } catch(e) {}
+
+        // No valid cache → call AI
+        const formData = new FormData();
+        formData.append('grant_id', '{{ grant.pk }}');
+
+        fetch('{% url "personalized_eligibility_api" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (!data.success || !data.points.length) {
+                list.innerHTML = '<li style="color:#94a3b8; font-size:0.85rem;">Could not load eligibility data.</li>';
+                return;
+            }
+            // Save to cache
+            localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), points: data.points }));
+            renderPoints(data.points);
+        })
+        .catch(() => {
+            list.innerHTML = '<li style="color:#ef4444; font-size:0.85rem;">Failed to load eligibility info.</li>';
+        });
+
+        function renderPoints(points) {
+            list.innerHTML = '';
+            points.forEach(point => {
+                const li = document.createElement('li');
+
+                let iconHtml, cssClass;
+                if (point.is_met === true) {
+                    iconHtml = '<span class="eli-icon">✓</span>';
+                    cssClass = 'met';
+                } else if (point.is_met === false) {
+                    iconHtml = '<span class="eli-icon">✗</span>';
+                    cssClass = 'unmet';
+                } else {
+                    iconHtml = '<span class="eli-icon">○</span>';
+                    cssClass = 'unknown';
+                }
+
+                const statusHtml = point.user_status
+                    ? ` &mdash; <span class="eli-status">${point.user_status}</span>`
+                    : '';
+
+                li.className = cssClass;
+                li.innerHTML = `${iconHtml}<span>${point.requirement}${statusHtml}</span>`;
+                list.appendChild(li);
+            });
+        }
+    });
+    {% endif %}
 </script>
 {% endblock %}

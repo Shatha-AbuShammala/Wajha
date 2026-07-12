@@ -14,7 +14,7 @@ class AIService:
     def generate_matches_for_student(student):
         """
         Calculates match scores ONLY for new grants that don't have a record yet.
-        Existing matches are preserved unchanged to prevent scores from fluctuating.
+        Existing matches are preserved unchanged to keep scores stable and consistent.
         """
         model = AIService._get_client()
         eligible_grants = list(GrantOpportunity.objects.filter(status='published'))
@@ -22,10 +22,10 @@ class AIService:
         if not eligible_grants:
             return []
 
+        # Only process grants that don't have a score yet
         existing_grant_ids = set(
             AIMatch.objects.filter(student=student).values_list('grant_id', flat=True)
         )
-
         new_grants = [g for g in eligible_grants if g.id not in existing_grant_ids]
 
         if new_grants:
@@ -118,6 +118,7 @@ Return ONLY the JSON array. No markdown, no extra text.
                 print(f"Batch match error for new grants: {str(e)}")
 
         return list(AIMatch.objects.filter(student=student).select_related('grant').order_by('-match_score'))
+
 
 
     @staticmethod
