@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.core.validators import RegexValidator
-from .models import User
+from .models import Document, User
 import re
 
 
@@ -11,7 +11,7 @@ class SignUpForm(UserCreationForm):
         max_length=200,
         required=True,
         label="Full Name",
-        widget=forms.TextInput(attrs={'placeholder': 'e.g. Simon Moon'})
+        widget=forms.TextInput(attrs={'placeholder': 'Simon Moon'}),
     )
     class Meta:
         model = User
@@ -49,7 +49,8 @@ class SignUpForm(UserCreationForm):
 class EmailAuthenticationForm(AuthenticationForm):
     username = forms.EmailField(
         label="Email",
-        widget=forms.EmailInput(attrs={'autofocus': True})
+        widget=forms.EmailInput(attrs={'autofocus': True, 'placeholder': 'yourname@gmail.com'})
+
     )
     password = forms.CharField(
         widget=forms.PasswordInput()
@@ -88,9 +89,20 @@ class ProfileSetupForm(forms.ModelForm):
             'field_of_study': forms.TextInput(),
             'degree_level': forms.Select(),
             'country': forms.TextInput(),
-            'languages': forms.TextInput(attrs={'placeholder': 'e.g. Arabic, English'}),
+            'languages': forms.TextInput(attrs={'placeholder': 'e.g Arabic, English'}),
             'cv_file': forms.FileInput(),
         }
+
+    def clean_cv_file(self):
+        cv_file = self.cleaned_data.get('cv_file')
+        # If no new file was submitted, Django keeps the existing value from
+        # the instance. In that case, skip re-validating it — it was already
+        # validated when it was first uploaded, and re-checking a file that
+        # may be missing on disk (e.g. after a fresh pull without media/)
+        # should not block saving the rest of the form.
+        if not self.files.get('cv_file'):
+            return self.instance.cv_file
+        return cv_file
 
     def clean(self):
         cleaned_data = super().clean()
@@ -114,3 +126,12 @@ class ProfileSetupForm(forms.ModelForm):
         if commit:
             instance.save()
         return instance
+
+class DocumentUploadForm(forms.ModelForm):
+    class Meta:
+        model = Document
+        fields = ['document_type', 'file']
+        widgets = {
+            'document_type': forms.Select(attrs={'class': 'input'}),
+            'file': forms.ClearableFileInput(attrs={'class': 'input'}),
+        }

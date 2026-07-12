@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load allauth %}
+
+{% block title %}Sign Up — Wajha{% endblock %}
+
+{% block content %}
+<div class="onb-shell">
+  <div class="onb-grid" style="grid-template-columns: 1fr; max-width: 480px; margin: 60px auto;">
+    <div class="onb-form">
+      <h2>{% trans "Complete your sign up" %}</h2>
+      <p>
+        {% blocktrans with provider_name=account.get_provider.name site_name=site.name %}
+        You are about to use your {{ provider_name }} account to sign in to {{ site_name }}. As a final step, please complete the following form:
+        {% endblocktrans %}
+      </p>
+
+      {% if form.errors %}
+      <div style="background:#fee; padding:10px; margin-bottom:12px; border-radius:8px;">
+        {{ form.errors }}
+      </div>
+      {% endif %}
+
+      {% if messages %}
+      {% for message in messages %}
+      <p class="helptext">{{ message }}</p>
+      {% endfor %}
+      {% endif %}
+
+      {% url 'socialaccount_signup' as action_url %}
+      <form method="post" action="{{ action_url }}">
+        {% csrf_token %}
+
+        {% for field in form %}
+        <div class="field" style="margin-bottom:16px;">
+          <label>{{ field.label }}</label>
+          {{ field }}
+          {% if field.help_text %}
+          <div class="helptext" style="font-size:12px;">{{ field.help_text }}</div>
+          {% endif %}
+        </div>
+        {% endfor %}
+
+        {{ redirect_field }}
+
+        <div class="onb-nav" style="justify-content:flex-end;">
+          <button type="submit" class="btn btn-primary">{% trans "Sign Up" %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

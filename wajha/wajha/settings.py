@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
+<<<<<<< HEAD
 
 from pathlib import Path
 from decouple import config
@@ -238,6 +239,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+=======
+from celery.schedules import crontab
+>>>>>>> e52d44f9b3615ecdc0137b648ad16168c2543723
 from pathlib import Path
 from decouple import config
 
@@ -451,26 +455,46 @@ SOCIALACCOUNT_EMAIL_REQUIRED = True
 SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'
 SOCIALACCOUNT_AUTO_SIGNUP = True
 
+# Gemini API key — must be set in .env
+GEMINI_API_KEY = config('GEMINI_API_KEY', default='')
 
 # ===================== Celery =====================
 
-from celery.schedules import crontab  # noqa: E402
-
-# Broker & result backend — set REDIS_URL in your .env
-CELERY_BROKER_URL    = config('REDIS_URL', default='redis://localhost:6379/0')
+CELERY_BROKER_URL = config('REDIS_URL', default='redis://localhost:6379/0')
 CELERY_RESULT_BACKEND = config('REDIS_URL', default='redis://localhost:6379/0')
 
-CELERY_TIMEZONE              = 'UTC'
-CELERY_ACCEPT_CONTENT        = ['json']
-CELERY_TASK_SERIALIZER       = 'json'
-CELERY_RESULT_SERIALIZER     = 'json'
-CELERY_TASK_TRACK_STARTED    = True
+CELERY_TIMEZONE = 'UTC'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TASK_TRACK_STARTED = True
 
-# ── Scheduled tasks ──────────────────────────────────────────────────────────
 CELERY_BEAT_SCHEDULE = {
     'run-all-scrapers-every-monday': {
+<<<<<<< HEAD
         'task':     'scrapers.tasks.run_all_scrapers_task',
         # Monday 00:00 UTC  =  Monday 03:00 AM
+        'schedule': crontab(hour=0, minute=0, day_of_week='monday'),
+    },
+}
+=======
+        'task': 'scrapers.tasks.run_all_scrapers_task',
+        # Monday 00:00 UTC = Monday 03:00 AM Amman time (UTC+3)
+        'schedule': crontab(hour=0, minute=0, day_of_week='monday'),
+    },
+}
+
+>>>>>>> e52d44f9b3615ecdc0137b648ad16168c2543723
+CELERY_TIMEZONE = 'UTC'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TASK_TRACK_STARTED = True
+
+CELERY_BEAT_SCHEDULE = {
+    'run-all-scrapers-every-monday': {
+        'task': 'scrapers.tasks.run_all_scrapers_task',
+        # Monday 00:00 UTC = Monday 03:00 AM Amman time (UTC+3)
         'schedule': crontab(hour=0, minute=0, day_of_week='monday'),
     },
 }

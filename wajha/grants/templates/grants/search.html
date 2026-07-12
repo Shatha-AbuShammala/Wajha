@@ -197,12 +197,11 @@
                  {{ days }} day{{ days|pluralize }} left
               </div>
             {% endwith %}
-            <button class="save-btn"
+            <button class="save-btn {% if grant.pk in saved_ids %}saved{% endif %}"
               type="button"
-              onclick="event.preventDefault(); saveGrant(this)"
               data-grant-id="{{ grant.pk }}">
-              Save +
-            </button>
+              {% if grant.pk in saved_ids %}Saved ✓{% else %}Save +{% endif %}
+          </button>
           </div>
 
         </a>
@@ -320,84 +319,57 @@
   }
 
   /* ── Render ── */
-  function renderResults(data) {
-    resultsCount.innerHTML = `<b>${data.count}</b> grant${data.count !== 1 ? 's' : ''} match — sorted by deadline`;
+  const isAuthenticated = "{{ user.is_authenticated|yesno:'true,false' }}" === 'true';
+const loginUrl = "{% url 'login' %}";
+const csrfToken = "{{ csrf_token }}";
 
-    const cards = data.grants.map(g => {
-      const urgent = g.days_left <= 14 ? 'urgent' : g.days_left <= 30 ? 'urgent' : '';
-      return `
-        <a href="${g.url}" class="lcard" style="text-decoration:none;color:inherit;">
-          <div class="lcard-thumb">${g.organization.slice(0,2).toUpperCase()}</div>
-          <div class="lcard-body">
-            <h4>${g.title}</h4>
-            <div class="meta">${g.organization}</div>
-            <div class="lcard-tags">
-              ${g.degree_levels.map(d => `<span class="pill pill-level">${d}</span>`).join('')}
-              ${g.countries.map(c => `<span class="tag">${c}</span>`).join('')}
-            </div>
-          </div>
-          <div class="lcard-right">
-            <div class="deadline ${urgent}">
-              <i class="fa-regular fa-clock"></i>  ${g.days_left} days left
-            </div>
-            <button class="save-btn" onclick="event.preventDefault();toggleSave(this,${g.id})">
-              Save +
-            </button>
-          </div>
-        </a>`;
-    }).join('');
+function saveGrantHandler(e) {
+    const btn = e.target.closest('.save-btn');
+    if (!btn) return;
 
-    resultsList.innerHTML = cards || '';
-    emptyState.style.display = data.count === 0 ? 'block' : 'none';
-    if (data.count === 0) resultsList.appendChild(emptyState);
-  }
+    e.preventDefault();
+    e.stopPropagation();
 
-  /* ── Toast ── */
-  function showToast(msg) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.style.opacity = '1';
-    t.style.transform = 'translateY(0)';
-    setTimeout(() => {
-      t.style.opacity = '0';
-      t.style.transform = 'translateY(12px)';
-    }, 2800);
-  }
-
-  /* ── Save ── */
-function saveGrant(btn) {
-    const grantId = btn.dataset.grantId;
-    
-    const isAuthenticated = "{{ user.is_authenticated|yesno:'true,false' }}" === 'true';
-    
     if (!isAuthenticated) {
-        window.location.href = "{% url 'login' %}";
+        window.location.href = loginUrl;
         return;
     }
+
+    const grantId = btn.dataset.grantId;
+    if (!grantId || btn.disabled) return;
+
+    btn.disabled = true;
 
     fetch(`/applications/save/${grantId}/`, {
         method: 'POST',
         headers: {
-            'X-CSRFToken': '{{ csrf_token }}',
-            'X-Requested-With': 'XMLHttpRequest',
-        }
+            'X-CSRFToken': csrfToken,
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
     })
-    .then(r => r.json())
+    .then(res => res.json())
     .then(data => {
-        if (data.saved) {
-            btn.classList.add('saved');
-            btn.textContent = 'Saved ✓';
-            showToast('Grant saved!');
-        } else {
-            btn.classList.remove('saved');
-            btn.textContent = 'Save +';
-            showToast('Removed from saved.');
+        if (data.ok) {
+            if (data.saved) {
+                btn.classList.add('saved');
+                btn.textContent = 'Saved ✓';
+                showToast('Grant saved!');
+            } else {
+                btn.classList.remove('saved');
+                btn.textContent = 'Save +';
+                showToast('Removed from saved.');
+            }
         }
     })
-    .catch(() => {
+    .catch(err => {
+        console.error('Save error:', err);
         showToast('Something went wrong.');
-    });
+    })
+    .finally(() => { btn.disabled = false; });
 }
+
+// Event delegation — بتشتغل حتى مع الأزرار يلي بتتولّد لاحقاً من renderResults
+resultsList.addEventListener('click', saveGrantHandler);
 
 /* ── Render ── */
 function renderResults(data) {
@@ -405,6 +377,8 @@ function renderResults(data) {
 
     const cards = data.grants.map(g => {
         const urgent = g.days_left <= 30 ? 'urgent' : '';
+        const savedClass = g.is_saved ? 'saved' : '';
+        const savedText = g.is_saved ? 'Saved ✓' : 'Save +';
         return `
             <a href="${g.url}" class="lcard" style="text-decoration:none;color:inherit;">
                 <div class="lcard-thumb">${g.organization.slice(0,2).toUpperCase()}</div>
@@ -420,11 +394,10 @@ function renderResults(data) {
                     <div class="deadline ${urgent}">
                         <i class="fa-regular fa-clock"></i> ${g.days_left} days left
                     </div>
-                    <button class="save-btn" 
+                    <button class="save-btn ${savedClass}"
                         type="button"
-                        data-grant-id="${g.id}"
-                        onclick="event.preventDefault(); saveGrant(this)">
-                        Save +
+                        data-grant-id="${g.id}">
+                        ${savedText}
                     </button>
                 </div>
             </a>`;

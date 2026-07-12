@@ -14,7 +14,7 @@ class AIService:
     def generate_matches_for_student(student):
         """
         Calculates match scores ONLY for new grants that don't have a record yet.
-        Existing matches are preserved unchanged to prevent scores from fluctuating.
+        Existing matches are preserved unchanged to keep scores stable and consistent.
         """
         model = AIService._get_client()
         eligible_grants = list(GrantOpportunity.objects.filter(status='published'))
@@ -22,27 +22,35 @@ class AIService:
         if not eligible_grants:
             return []
 
+        # Only process grants that don't have a score yet
         existing_grant_ids = set(
             AIMatch.objects.filter(student=student).values_list('grant_id', flat=True)
         )
-
         new_grants = [g for g in eligible_grants if g.id not in existing_grant_ids]
 
         if new_grants:
             degree_level = student.get_degree_level_display() if hasattr(student, 'get_degree_level_display') else getattr(student, 'degree_level', "Master's")
-            field_of_study = getattr(student, 'field_of_study', '')
-            gpa = str(getattr(student, 'gpa', ''))
+            field_of_study = getattr(student, 'field_of_study', 'Not specified')
+            gpa = str(getattr(student, 'gpa', 'Not specified'))
             bio = getattr(student, 'bio', '')
-            languages = getattr(student, 'languages', '')
+            languages = getattr(student, 'languages', 'Not specified')
+            country = getattr(student, 'country', 'Not specified')
             has_cv = "Yes" if getattr(student, 'cv_file', None) else "No"
 
             grants_text = ""
             for i, grant in enumerate(new_grants):
+                grant_fields   = ", ".join([f.field_name for f in grant.fields.all()]) or "Not specified"
+                grant_degrees  = ", ".join([d.get_degree_display() for d in grant.degree_levels.all()]) or "Not specified"
+                grant_countries = ", ".join([c.country_name for c in grant.countries.all()]) or "Open to all"
+
                 grants_text += f"""
   Grant #{i + 1} (ID: {grant.id}):
     - Title: {grant.title}
+    - Eligible Degree Levels: {grant_degrees}
+    - Eligible Fields of Study: {grant_fields}
+    - Eligible Countries/Nationalities: {grant_countries}
     - Description: {grant.description[:400]}
-    - Eligibility: {grant.eligibility_text[:400]}
+    - Eligibility Requirements: {grant.eligibility_text[:400]}
 """
 
             prompt = f"""
@@ -52,18 +60,25 @@ Analyze this student's profile against EACH of the grants listed below and retur
 Student Profile:
 - Degree Level: {degree_level}
 - Field of Study: {field_of_study}
+- Country/Nationality: {country}
 - GPA: {gpa} (out of 4.0)
-- Bio/Experience: {bio}
 - Languages: {languages}
+- Bio/Experience: {bio}
 - Has CV Uploaded: {has_cv}
 
 Grants to analyze:
 {grants_text}
 
+Matching Rules (apply strictly):
+- If the student's degree level is NOT in the grant's "Eligible Degree Levels", the score must be below 40.
+- If the student's field of study does NOT match any of the grant's "Eligible Fields of Study", reduce the score significantly.
+- If the grant's "Eligible Countries/Nationalities" is not "Open to all" and the student's country is NOT listed, the score must be below 30.
+- Base the score on how well the student's full profile matches the grant's requirements.
+
 Tasks for EACH grant:
-1. Calculate a strict Match Score (float, 0.00–100.00). Be realistic.
-2. Write a concise 1–2 sentence explanation in the style of "Why it fits", e.g.:
-   "Your CS background + 3.6 GPA clear the bar, and DAAD funds Palestinian Masters students."
+1. Calculate a strict Match Score (float, 0.00–100.00). Be realistic and apply the rules above.
+2. Write a concise 1–2 sentence explanation in the style of "Why it fits" or "Why it doesn't fit", e.g.:
+   "Your CS background + 3.6 GPA meet the criteria, and DAAD funds Palestinian Master's students."
 
 Output MUST be a valid JSON array (one object per grant, in the same order):
 [
@@ -103,6 +118,7 @@ Return ONLY the JSON array. No markdown, no extra text.
                 print(f"Batch match error for new grants: {str(e)}")
 
         return list(AIMatch.objects.filter(student=student).select_related('grant').order_by('-match_score'))
+
 
 
     @staticmethod

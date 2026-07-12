@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.db.models import Q
+from applications.models import Application
 from django.utils import timezone
 from datetime import timedelta
 from .models import GrantOpportunity, GrantFieldOfStudy, GrantDegreeLevel, GrantCountry
@@ -91,7 +92,6 @@ def grant_search(request):
     ).prefetch_related('fields', 'degree_levels', 'countries')
 
     if form.is_valid():
-        # Filter by search query
         query = form.cleaned_data.get('query')
         if query:
             grants = grants.filter(
@@ -99,34 +99,39 @@ def grant_search(request):
                 Q(organization__icontains=query)
             )
 
-        # Filter by degree level
         degree_levels = form.cleaned_data.get('degree_level')
         if degree_levels:
             grants = grants.filter(
                 degree_levels__degree__in=degree_levels
             ).distinct()
 
-        # Filter by country
         country = form.cleaned_data.get('country')
         if country:
             grants = grants.filter(
                 countries__country_name__icontains=country
             ).distinct()
 
-        # Filter by field of study
         field = form.cleaned_data.get('field_of_study')
         if field:
             grants = grants.filter(
                 fields__field_name__icontains=field
             ).distinct()
 
-        # Filter by deadline within x days
         deadline_within = form.cleaned_data.get('deadline_within')
         if deadline_within:
             max_date = timezone.now().date() + timedelta(days=deadline_within)
             grants = grants.filter(deadline__lte=max_date)
 
-    # AJAX request → return JSON
+    # هات الـ ids تبع المنح المحفوظة (status='saved') لهالمستخدم
+    if request.user.is_authenticated:
+        saved_ids = set(
+            Application.objects.filter(
+                student=request.user, status='saved'
+            ).values_list('grant_id', flat=True)
+        )
+    else:
+        saved_ids = set()
+
     is_ajax = (
         request.headers.get('x-requested-with') == 'XMLHttpRequest'
         or request.GET.get('format') == 'json'
@@ -150,10 +155,10 @@ def grant_search(request):
                     grant.countries.values_list('country_name', flat=True)
                 ),
                 'url': f'/grants/{grant.pk}/',
+                'is_saved': grant.pk in saved_ids,
             })
         return JsonResponse({'grants': data, 'count': len(data)})
 
-    # Normal request → render page
     total = grants.count()
     paginator = Paginator(grants, 10)
     page_number = request.GET.get('page')
@@ -173,9 +178,9 @@ def grant_search(request):
         'total_count': total,
         'all_countries': all_countries,
         'all_fields': all_fields,
+        'saved_ids': saved_ids,
     }
     return render(request, 'grants/search.html', context)
-
 
 # ============================================================
 # Admin Views

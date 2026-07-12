@@ -14,7 +14,7 @@ def student_matches(request):
     Displays AI Matches page and recalculates matches via AJAX.
     """
     # Fetch existing matches sorted by match score
-    matches = AIMatch.objects.filter(student=request.user).select_related('grant').order_by('-match_score')
+    matches = AIMatch.objects.filter(student=request.user, match_score__gte=50).select_related('grant').order_by('-match_score')
     
     if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
         try:
@@ -22,7 +22,7 @@ def student_matches(request):
             AIService.generate_matches_for_student(request.user)
             
             # Fetch updated matches
-            updated_matches = AIMatch.objects.filter(student=request.user).select_related('grant').order_by('-match_score')
+            updated_matches = AIMatch.objects.filter(student=request.user, match_score__gte=50).select_related('grant').order_by('-match_score')
             saved_grant_ids = list(Application.objects.filter(student=request.user).values_list('grant_id', flat=True))
             
             
@@ -161,6 +161,23 @@ def save_letter_api(request):
     application.save(update_fields=['motivation_letter_text', 'letter_drafted', 'updated_at'])
     
     return JsonResponse({'success': True, 'created': created})
+
+
+@login_required
+@require_POST
+def personalized_eligibility_api(request):
+    """
+    API endpoint to generate personalized eligibility points for a student vs a grant.
+    """
+    grant_id = request.POST.get('grant_id')
+
+    if not grant_id:
+        return JsonResponse({'success': False, 'error': 'Missing grant ID'}, status=400)
+
+    grant = get_object_or_404(GrantOpportunity, id=grant_id)
+    points = AIService.generate_personalized_eligibility(grant, request.user)
+
+    return JsonResponse({'success': True, 'points': points})
 
 
 @login_required
