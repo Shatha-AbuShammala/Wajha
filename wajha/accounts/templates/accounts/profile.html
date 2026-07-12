@@ -139,7 +139,6 @@
       <!-- Empty state (only if nothing at all uploaded) -->
       {% if not profile_user.cv_file and not documents %}
       <div class="doc-empty">
-        <i class="fa-regular fa-file-arrow-up"></i>
         <p>No documents uploaded yet.</p>
         <a href="{% url 'profile_setup' %}" class="btn btn-ghost btn-sm" style="margin-top:10px;">
           Upload CV →
