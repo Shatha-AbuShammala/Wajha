@@ -124,12 +124,12 @@
             <i class="fa-regular fa-eye"></i> View
           </a>
           <a href="{{ doc.file.url }}" download class="btn btn-ghost btn-sm">
-            <i class="fa-regular fa-arrow-down-to-line"></i> Download
+          Download
           </a>
           <form method="post" action="{% url 'document_delete' doc.id %}" style="display:inline;">
             {% csrf_token %}
             <button type="submit" class="btn btn-ghost btn-sm" style="color:var(--red);">
-              <i class="fa-regular fa-trash"></i> Delete
+             Delete
             </button>
           </form>
         </div>
