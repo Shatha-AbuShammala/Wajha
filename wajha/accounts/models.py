@@ -47,9 +47,12 @@ class User(AbstractUser):
 def validate_document_file(file):
     if not file.name.lower().endswith('.pdf'):
         raise ValidationError("The file must be in PDF format only.")
-    if file.size > 5 * 1024 * 1024:
+    try:
+        size = file.size
+    except (FileNotFoundError, OSError):
+        return
+    if size > 5 * 1024 * 1024:
         raise ValidationError('The file size must not exceed 5 megabytes.')
-
 
 class Document(models.Model):
     DOCUMENT_TYPE_CHOICES = (
@@ -61,7 +64,7 @@ class Document(models.Model):
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='documents')
     document_type = models.CharField(max_length=30, choices=DOCUMENT_TYPE_CHOICES)
-    file = models.FileField(upload_to='documents/', validators=[validate_cv_file])
+    file = models.FileField(upload_to='documents/', validators=[validate_document_file])
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
